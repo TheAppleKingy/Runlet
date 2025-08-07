@@ -2,12 +2,14 @@ services:
   runlet_backend_service:
     build:
       context: .
+      dockerfile: DockerFile
     env_file:
       - .env
     ports:
       - "8080:8080"
     depends_on:
       - database
+    command: sh -c "/app/migrate"
     
   database:
     image: postgres:17.5-alpine
@@ -15,6 +17,8 @@ services:
       - .env
     volumes:
       - runlet_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
 volumes:
   runlet_db_data:
