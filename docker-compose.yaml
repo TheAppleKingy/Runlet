@@ -9,7 +9,7 @@ services:
       - "8080:8080"
     depends_on:
       - database
-    command: sh -c "/app/migrate"
+    command: sh -c "/app/app"
     
   database:
     image: postgres:17.5-alpine

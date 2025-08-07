@@ -12,6 +12,7 @@ var (
 	CoursesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "title", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Unique: true},
 	}
 	// CoursesTable holds the schema information for the "courses" table.
 	CoursesTable = &schema.Table{

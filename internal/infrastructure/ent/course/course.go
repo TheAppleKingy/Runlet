@@ -14,6 +14,8 @@ const (
 	FieldID = "id"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// EdgeProblems holds the string denoting the problems edge name in mutations.
 	EdgeProblems = "problems"
 	// Table holds the table name of the course in the database.
@@ -31,6 +33,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldTitle,
+	FieldDescription,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -54,6 +57,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByTitle orders the results by the title field.
 func ByTitle(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTitle, opts...).ToFunc()
+}
+
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
 // ByProblemsCount orders the results by problems count.

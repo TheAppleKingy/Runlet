@@ -35,6 +35,7 @@ type CourseMutation struct {
 	typ             string
 	id              *int
 	title           *string
+	description     *string
 	clearedFields   map[string]struct{}
 	problems        map[int]struct{}
 	removedproblems map[int]struct{}
@@ -178,6 +179,42 @@ func (m *CourseMutation) ResetTitle() {
 	m.title = nil
 }
 
+// SetDescription sets the "description" field.
+func (m *CourseMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *CourseMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Course entity.
+// If the Course object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CourseMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *CourseMutation) ResetDescription() {
+	m.description = nil
+}
+
 // AddProblemIDs adds the "problems" edge to the Problem entity by ids.
 func (m *CourseMutation) AddProblemIDs(ids ...int) {
 	if m.problems == nil {
@@ -266,9 +303,12 @@ func (m *CourseMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CourseMutation) Fields() []string {
-	fields := make([]string, 0, 1)
+	fields := make([]string, 0, 2)
 	if m.title != nil {
 		fields = append(fields, course.FieldTitle)
+	}
+	if m.description != nil {
+		fields = append(fields, course.FieldDescription)
 	}
 	return fields
 }
@@ -280,6 +320,8 @@ func (m *CourseMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case course.FieldTitle:
 		return m.Title()
+	case course.FieldDescription:
+		return m.Description()
 	}
 	return nil, false
 }
@@ -291,6 +333,8 @@ func (m *CourseMutation) OldField(ctx context.Context, name string) (ent.Value, 
 	switch name {
 	case course.FieldTitle:
 		return m.OldTitle(ctx)
+	case course.FieldDescription:
+		return m.OldDescription(ctx)
 	}
 	return nil, fmt.Errorf("unknown Course field %s", name)
 }
@@ -306,6 +350,13 @@ func (m *CourseMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTitle(v)
+		return nil
+	case course.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Course field %s", name)
@@ -358,6 +409,9 @@ func (m *CourseMutation) ResetField(name string) error {
 	switch name {
 	case course.FieldTitle:
 		m.ResetTitle()
+		return nil
+	case course.FieldDescription:
+		m.ResetDescription()
 		return nil
 	}
 	return fmt.Errorf("unknown Course field %s", name)

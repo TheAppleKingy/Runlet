@@ -13,6 +13,7 @@ type Course struct {
 func (Course) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("title").Unique(),
+		field.String("description").Unique(),
 	}
 }
 

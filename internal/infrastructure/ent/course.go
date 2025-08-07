@@ -18,6 +18,8 @@ type Course struct {
 	ID int `json:"id,omitempty"`
 	// Title holds the value of the "title" field.
 	Title string `json:"title,omitempty"`
+	// Description holds the value of the "description" field.
+	Description string `json:"description,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the CourseQuery when eager-loading is set.
 	Edges        CourseEdges `json:"edges"`
@@ -49,7 +51,7 @@ func (*Course) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case course.FieldID:
 			values[i] = new(sql.NullInt64)
-		case course.FieldTitle:
+		case course.FieldTitle, course.FieldDescription:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -77,6 +79,12 @@ func (_m *Course) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
 				_m.Title = value.String
+			}
+		case course.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				_m.Description = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -121,6 +129,9 @@ func (_m *Course) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("title=")
 	builder.WriteString(_m.Title)
+	builder.WriteString(", ")
+	builder.WriteString("description=")
+	builder.WriteString(_m.Description)
 	builder.WriteByte(')')
 	return builder.String()
 }

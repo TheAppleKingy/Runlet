@@ -42,6 +42,20 @@ func (_u *CourseUpdate) SetNillableTitle(v *string) *CourseUpdate {
 	return _u
 }
 
+// SetDescription sets the "description" field.
+func (_u *CourseUpdate) SetDescription(v string) *CourseUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *CourseUpdate) SetNillableDescription(v *string) *CourseUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
+	}
+	return _u
+}
+
 // AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
 func (_u *CourseUpdate) AddProblemIDs(ids ...int) *CourseUpdate {
 	_u.mutation.AddProblemIDs(ids...)
@@ -122,6 +136,9 @@ func (_u *CourseUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(course.FieldTitle, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(course.FieldDescription, field.TypeString, value)
+	}
 	if _u.mutation.ProblemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -197,6 +214,20 @@ func (_u *CourseUpdateOne) SetTitle(v string) *CourseUpdateOne {
 func (_u *CourseUpdateOne) SetNillableTitle(v *string) *CourseUpdateOne {
 	if v != nil {
 		_u.SetTitle(*v)
+	}
+	return _u
+}
+
+// SetDescription sets the "description" field.
+func (_u *CourseUpdateOne) SetDescription(v string) *CourseUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
+}
+
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (_u *CourseUpdateOne) SetNillableDescription(v *string) *CourseUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
 	return _u
 }
@@ -310,6 +341,9 @@ func (_u *CourseUpdateOne) sqlSave(ctx context.Context) (_node *Course, err erro
 	}
 	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(course.FieldTitle, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Description(); ok {
+		_spec.SetField(course.FieldDescription, field.TypeString, value)
 	}
 	if _u.mutation.ProblemsCleared() {
 		edge := &sqlgraph.EdgeSpec{

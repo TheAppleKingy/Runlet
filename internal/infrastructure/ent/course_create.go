@@ -26,6 +26,12 @@ func (_c *CourseCreate) SetTitle(v string) *CourseCreate {
 	return _c
 }
 
+// SetDescription sets the "description" field.
+func (_c *CourseCreate) SetDescription(v string) *CourseCreate {
+	_c.mutation.SetDescription(v)
+	return _c
+}
+
 // AddProblemIDs adds the "problems" edge to the Problem entity by IDs.
 func (_c *CourseCreate) AddProblemIDs(ids ...int) *CourseCreate {
 	_c.mutation.AddProblemIDs(ids...)
@@ -78,6 +84,9 @@ func (_c *CourseCreate) check() error {
 	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Course.title"`)}
 	}
+	if _, ok := _c.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Course.description"`)}
+	}
 	return nil
 }
 
@@ -107,6 +116,10 @@ func (_c *CourseCreate) createSpec() (*Course, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(course.FieldTitle, field.TypeString, value)
 		_node.Title = value
+	}
+	if value, ok := _c.mutation.Description(); ok {
+		_spec.SetField(course.FieldDescription, field.TypeString, value)
+		_node.Description = value
 	}
 	if nodes := _c.mutation.ProblemsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
