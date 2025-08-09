@@ -6,8 +6,20 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Attempt is the predicate function for attempt builders.
+type Attempt func(*sql.Selector)
+
+// Class is the predicate function for class builders.
+type Class func(*sql.Selector)
+
 // Course is the predicate function for course builders.
 type Course func(*sql.Selector)
 
 // Problem is the predicate function for problem builders.
 type Problem func(*sql.Selector)
+
+// Student is the predicate function for student builders.
+type Student func(*sql.Selector)
+
+// Teacher is the predicate function for teacher builders.
+type Teacher func(*sql.Selector)

@@ -20,6 +20,10 @@ const (
 	FieldCourseID = "course_id"
 	// EdgeCourse holds the string denoting the course edge name in mutations.
 	EdgeCourse = "course"
+	// EdgeAttempts holds the string denoting the attempts edge name in mutations.
+	EdgeAttempts = "attempts"
+	// EdgeStudents holds the string denoting the students edge name in mutations.
+	EdgeStudents = "students"
 	// Table holds the table name of the problem in the database.
 	Table = "problems"
 	// CourseTable is the table that holds the course relation/edge.
@@ -29,6 +33,18 @@ const (
 	CourseInverseTable = "courses"
 	// CourseColumn is the table column denoting the course relation/edge.
 	CourseColumn = "course_id"
+	// AttemptsTable is the table that holds the attempts relation/edge.
+	AttemptsTable = "attempts"
+	// AttemptsInverseTable is the table name for the Attempt entity.
+	// It exists in this package in order to avoid circular dependency with the "attempt" package.
+	AttemptsInverseTable = "attempts"
+	// AttemptsColumn is the table column denoting the attempts relation/edge.
+	AttemptsColumn = "problem_id"
+	// StudentsTable is the table that holds the students relation/edge. The primary key declared below.
+	StudentsTable = "student_problems"
+	// StudentsInverseTable is the table name for the Student entity.
+	// It exists in this package in order to avoid circular dependency with the "student" package.
+	StudentsInverseTable = "students"
 )
 
 // Columns holds all SQL columns for problem fields.
@@ -39,6 +55,12 @@ var Columns = []string{
 	FieldCourseID,
 }
 
+var (
+	// StudentsPrimaryKey and StudentsColumn2 are the table columns denoting the
+	// primary key for the students relation (M2M).
+	StudentsPrimaryKey = []string{"student_id", "problem_id"}
+)
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
@@ -48,6 +70,11 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
+
+var (
+	// TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	TitleValidator func(string) error
+)
 
 // OrderOption defines the ordering options for the Problem queries.
 type OrderOption func(*sql.Selector)
@@ -78,10 +105,52 @@ func ByCourseField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCourseStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByAttemptsCount orders the results by attempts count.
+func ByAttemptsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAttemptsStep(), opts...)
+	}
+}
+
+// ByAttempts orders the results by attempts terms.
+func ByAttempts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAttemptsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByStudentsCount orders the results by students count.
+func ByStudentsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newStudentsStep(), opts...)
+	}
+}
+
+// ByStudents orders the results by students terms.
+func ByStudents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newStudentsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCourseStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CourseInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, CourseTable, CourseColumn),
+	)
+}
+func newAttemptsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AttemptsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AttemptsTable, AttemptsColumn),
+	)
+}
+func newStudentsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(StudentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, StudentsTable, StudentsPrimaryKey...),
 	)
 }

@@ -8,6 +8,45 @@ import (
 )
 
 var (
+	// AttemptsColumns holds the columns for the "attempts" table.
+	AttemptsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "amount", Type: field.TypeUint, Default: 0},
+		{Name: "done", Type: field.TypeBool, Default: false},
+		{Name: "problem_id", Type: field.TypeInt},
+		{Name: "student_id", Type: field.TypeInt},
+	}
+	// AttemptsTable holds the schema information for the "attempts" table.
+	AttemptsTable = &schema.Table{
+		Name:       "attempts",
+		Columns:    AttemptsColumns,
+		PrimaryKey: []*schema.Column{AttemptsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "attempts_problems_attempts",
+				Columns:    []*schema.Column{AttemptsColumns[3]},
+				RefColumns: []*schema.Column{ProblemsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "attempts_students_attempts",
+				Columns:    []*schema.Column{AttemptsColumns[4]},
+				RefColumns: []*schema.Column{StudentsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ClassesColumns holds the columns for the "classes" table.
+	ClassesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "number", Type: field.TypeString, Unique: true},
+	}
+	// ClassesTable holds the schema information for the "classes" table.
+	ClassesTable = &schema.Table{
+		Name:       "classes",
+		Columns:    ClassesColumns,
+		PrimaryKey: []*schema.Column{ClassesColumns[0]},
+	}
 	// CoursesColumns holds the columns for the "courses" table.
 	CoursesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -23,7 +62,7 @@ var (
 	// ProblemsColumns holds the columns for the "problems" table.
 	ProblemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "title", Type: field.TypeString},
+		{Name: "title", Type: field.TypeString, Size: 70},
 		{Name: "description", Type: field.TypeString},
 		{Name: "course_id", Type: field.TypeInt},
 	}
@@ -41,13 +80,163 @@ var (
 			},
 		},
 	}
+	// StudentsColumns holds the columns for the "students" table.
+	StudentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "class_id", Type: field.TypeInt},
+	}
+	// StudentsTable holds the schema information for the "students" table.
+	StudentsTable = &schema.Table{
+		Name:       "students",
+		Columns:    StudentsColumns,
+		PrimaryKey: []*schema.Column{StudentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "students_classes_students",
+				Columns:    []*schema.Column{StudentsColumns[2]},
+				RefColumns: []*schema.Column{ClassesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// TeachersColumns holds the columns for the "teachers" table.
+	TeachersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString, Size: 100},
+	}
+	// TeachersTable holds the schema information for the "teachers" table.
+	TeachersTable = &schema.Table{
+		Name:       "teachers",
+		Columns:    TeachersColumns,
+		PrimaryKey: []*schema.Column{TeachersColumns[0]},
+	}
+	// ClassCoursesColumns holds the columns for the "class_courses" table.
+	ClassCoursesColumns = []*schema.Column{
+		{Name: "class_id", Type: field.TypeInt},
+		{Name: "course_id", Type: field.TypeInt},
+	}
+	// ClassCoursesTable holds the schema information for the "class_courses" table.
+	ClassCoursesTable = &schema.Table{
+		Name:       "class_courses",
+		Columns:    ClassCoursesColumns,
+		PrimaryKey: []*schema.Column{ClassCoursesColumns[0], ClassCoursesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "class_courses_class_id",
+				Columns:    []*schema.Column{ClassCoursesColumns[0]},
+				RefColumns: []*schema.Column{ClassesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "class_courses_course_id",
+				Columns:    []*schema.Column{ClassCoursesColumns[1]},
+				RefColumns: []*schema.Column{CoursesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// StudentProblemsColumns holds the columns for the "student_problems" table.
+	StudentProblemsColumns = []*schema.Column{
+		{Name: "student_id", Type: field.TypeInt},
+		{Name: "problem_id", Type: field.TypeInt},
+	}
+	// StudentProblemsTable holds the schema information for the "student_problems" table.
+	StudentProblemsTable = &schema.Table{
+		Name:       "student_problems",
+		Columns:    StudentProblemsColumns,
+		PrimaryKey: []*schema.Column{StudentProblemsColumns[0], StudentProblemsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "student_problems_student_id",
+				Columns:    []*schema.Column{StudentProblemsColumns[0]},
+				RefColumns: []*schema.Column{StudentsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "student_problems_problem_id",
+				Columns:    []*schema.Column{StudentProblemsColumns[1]},
+				RefColumns: []*schema.Column{ProblemsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// TeacherClassesColumns holds the columns for the "teacher_classes" table.
+	TeacherClassesColumns = []*schema.Column{
+		{Name: "teacher_id", Type: field.TypeInt},
+		{Name: "class_id", Type: field.TypeInt},
+	}
+	// TeacherClassesTable holds the schema information for the "teacher_classes" table.
+	TeacherClassesTable = &schema.Table{
+		Name:       "teacher_classes",
+		Columns:    TeacherClassesColumns,
+		PrimaryKey: []*schema.Column{TeacherClassesColumns[0], TeacherClassesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "teacher_classes_teacher_id",
+				Columns:    []*schema.Column{TeacherClassesColumns[0]},
+				RefColumns: []*schema.Column{TeachersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "teacher_classes_class_id",
+				Columns:    []*schema.Column{TeacherClassesColumns[1]},
+				RefColumns: []*schema.Column{ClassesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// TeacherCoursesColumns holds the columns for the "teacher_courses" table.
+	TeacherCoursesColumns = []*schema.Column{
+		{Name: "teacher_id", Type: field.TypeInt},
+		{Name: "course_id", Type: field.TypeInt},
+	}
+	// TeacherCoursesTable holds the schema information for the "teacher_courses" table.
+	TeacherCoursesTable = &schema.Table{
+		Name:       "teacher_courses",
+		Columns:    TeacherCoursesColumns,
+		PrimaryKey: []*schema.Column{TeacherCoursesColumns[0], TeacherCoursesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "teacher_courses_teacher_id",
+				Columns:    []*schema.Column{TeacherCoursesColumns[0]},
+				RefColumns: []*schema.Column{TeachersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "teacher_courses_course_id",
+				Columns:    []*schema.Column{TeacherCoursesColumns[1]},
+				RefColumns: []*schema.Column{CoursesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AttemptsTable,
+		ClassesTable,
 		CoursesTable,
 		ProblemsTable,
+		StudentsTable,
+		TeachersTable,
+		ClassCoursesTable,
+		StudentProblemsTable,
+		TeacherClassesTable,
+		TeacherCoursesTable,
 	}
 )
 
 func init() {
+	AttemptsTable.ForeignKeys[0].RefTable = ProblemsTable
+	AttemptsTable.ForeignKeys[1].RefTable = StudentsTable
 	ProblemsTable.ForeignKeys[0].RefTable = CoursesTable
+	StudentsTable.ForeignKeys[0].RefTable = ClassesTable
+	ClassCoursesTable.ForeignKeys[0].RefTable = ClassesTable
+	ClassCoursesTable.ForeignKeys[1].RefTable = CoursesTable
+	StudentProblemsTable.ForeignKeys[0].RefTable = StudentsTable
+	StudentProblemsTable.ForeignKeys[1].RefTable = ProblemsTable
+	TeacherClassesTable.ForeignKeys[0].RefTable = TeachersTable
+	TeacherClassesTable.ForeignKeys[1].RefTable = ClassesTable
+	TeacherCoursesTable.ForeignKeys[0].RefTable = TeachersTable
+	TeacherCoursesTable.ForeignKeys[1].RefTable = CoursesTable
 }

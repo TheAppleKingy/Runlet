@@ -3,7 +3,7 @@ package repositoryimpl
 import (
 	"Runlet/internal/domain/repository"
 	"Runlet/internal/infrastructure/ent"
-	"Runlet/internal/infrastructure/ent/course"
+	"Runlet/internal/infrastructure/ent/class"
 	"context"
 )
 
@@ -16,14 +16,30 @@ func (cr *CourseRepository) GetCourseById(ctx context.Context, id int) (*ent.Cou
 	return cr.client.Course.Get(ctx, id)
 }
 
-func (cr *CourseRepository) GetCourseByTitle(ctx context.Context, title string) (*ent.Course, error) {
-	return cr.client.Course.Query().Where(course.TitleEQ(title)).Only(ctx)
-}
-
-func (cr *CourseRepository) GetCourses(ctx context.Context) ([]*ent.Course, error) {
+func (cr *CourseRepository) GetAllCourses(ctx context.Context) ([]*ent.Course, error) {
 	return cr.client.Course.Query().WithProblems().All(ctx)
 }
 
-func (cr *CourseRepository) CreateCourse(ctx context.Context, title string, description string) (*ent.Course, error) {
-	return cr.client.Course.Create().SetTitle(title).SetDescription(description).Save(ctx)
+func (cr *CourseRepository) CreateCourse(ctx context.Context, title string, description string, classesIds []int) (*ent.Course, error) {
+	return cr.client.Course.Create().SetTitle(title).SetDescription(description).AddClassIDs(classesIds...).Save(ctx)
+}
+
+func (cr *CourseRepository) DeleteCourse(ctx context.Context, id int) error {
+	return cr.client.Course.DeleteOneID(id).Exec(ctx)
+}
+
+func (cr *CourseRepository) AddClasses(ctx context.Context, courseId int, classesIds []int) ([]*ent.Class, error) {
+	updatedCourse, err := cr.client.Course.UpdateOneID(courseId).AddClassIDs(classesIds...).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return updatedCourse.QueryClasses().Where(class.IDIn(classesIds...)).All(ctx)
+}
+
+func (cr *CourseRepository) ExcludeStudents(ctx context.Context, courseId int, classesIds []int) ([]*ent.Class, error) {
+	updatedCourse, err := cr.client.Course.UpdateOneID(courseId).RemoveClassIDs(classesIds...).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return updatedCourse.QueryClasses().Where(class.IDIn(classesIds...)).All(ctx)
 }

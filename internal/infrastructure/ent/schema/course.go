@@ -20,5 +20,7 @@ func (Course) Fields() []ent.Field {
 func (Course) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("problems", Problem.Type),
+		edge.From("classes", Class.Type).Ref("courses"),
+		edge.From("teachers", Teacher.Type).Ref("courses"),
 	}
 }

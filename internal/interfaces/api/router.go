@@ -4,13 +4,22 @@ import (
 	"Runlet/internal/infrastructure/ent"
 	"Runlet/internal/interfaces/api/handlers"
 
+	_ "Runlet/docs"
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title Runlet API
+// @version 1.0
+// @description API documentation for Runlet
+// @host localhost:8080
+// @BasePath /api
 func GetRouter(dbClient *ent.Client) *gin.Engine {
-	courseHandler := handlers.NewCourseHandler(dbClient)
 	router := gin.Default()
-	router.GET("/api/courses", courseHandler.GetCourses)
-	router.POST("/api/courses", courseHandler.CreateCourse)
+	apiRouter := router.Group("/api")
+	handlers.ConnectStudentRouter(apiRouter, dbClient)
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
 }

@@ -12,7 +12,7 @@ type Problem struct {
 
 func (Problem) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("title"),
+		field.String("title").MaxLen(70),
 		field.String("description"),
 		field.Int("course_id"),
 	}
@@ -21,5 +21,7 @@ func (Problem) Fields() []ent.Field {
 func (Problem) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("course", Course.Type).Ref("problems").Field("course_id").Unique().Required(),
+		edge.To("attempts", Attempt.Type),
+		edge.From("students", Student.Type).Ref("problems"),
 	}
 }

@@ -18,6 +18,10 @@ const (
 	FieldDescription = "description"
 	// EdgeProblems holds the string denoting the problems edge name in mutations.
 	EdgeProblems = "problems"
+	// EdgeClasses holds the string denoting the classes edge name in mutations.
+	EdgeClasses = "classes"
+	// EdgeTeachers holds the string denoting the teachers edge name in mutations.
+	EdgeTeachers = "teachers"
 	// Table holds the table name of the course in the database.
 	Table = "courses"
 	// ProblemsTable is the table that holds the problems relation/edge.
@@ -27,6 +31,16 @@ const (
 	ProblemsInverseTable = "problems"
 	// ProblemsColumn is the table column denoting the problems relation/edge.
 	ProblemsColumn = "course_id"
+	// ClassesTable is the table that holds the classes relation/edge. The primary key declared below.
+	ClassesTable = "class_courses"
+	// ClassesInverseTable is the table name for the Class entity.
+	// It exists in this package in order to avoid circular dependency with the "class" package.
+	ClassesInverseTable = "classes"
+	// TeachersTable is the table that holds the teachers relation/edge. The primary key declared below.
+	TeachersTable = "teacher_courses"
+	// TeachersInverseTable is the table name for the Teacher entity.
+	// It exists in this package in order to avoid circular dependency with the "teacher" package.
+	TeachersInverseTable = "teachers"
 )
 
 // Columns holds all SQL columns for course fields.
@@ -35,6 +49,15 @@ var Columns = []string{
 	FieldTitle,
 	FieldDescription,
 }
+
+var (
+	// ClassesPrimaryKey and ClassesColumn2 are the table columns denoting the
+	// primary key for the classes relation (M2M).
+	ClassesPrimaryKey = []string{"class_id", "course_id"}
+	// TeachersPrimaryKey and TeachersColumn2 are the table columns denoting the
+	// primary key for the teachers relation (M2M).
+	TeachersPrimaryKey = []string{"teacher_id", "course_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -77,10 +100,52 @@ func ByProblems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newProblemsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByClassesCount orders the results by classes count.
+func ByClassesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newClassesStep(), opts...)
+	}
+}
+
+// ByClasses orders the results by classes terms.
+func ByClasses(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newClassesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByTeachersCount orders the results by teachers count.
+func ByTeachersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTeachersStep(), opts...)
+	}
+}
+
+// ByTeachers orders the results by teachers terms.
+func ByTeachers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTeachersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newProblemsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProblemsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ProblemsTable, ProblemsColumn),
+	)
+}
+func newClassesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ClassesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ClassesTable, ClassesPrimaryKey...),
+	)
+}
+func newTeachersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TeachersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, TeachersTable, TeachersPrimaryKey...),
 	)
 }

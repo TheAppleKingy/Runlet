@@ -1,15 +1,15 @@
 package handlers
 
 import (
-	"Runlet/internal/application/service"
 	"Runlet/internal/infrastructure/ent"
-	"Runlet/internal/infrastructure/repositoryimpl"
+	"Runlet/internal/interfaces/api/handlers/student"
+
+	"github.com/gin-gonic/gin"
 )
 
-func NewCourseHandler(dbClient *ent.Client) *CourseHandler {
-	courseRepo := repositoryimpl.NewCourseRepository(dbClient)
-	courseService := service.NewCourseService(courseRepo)
-	return &CourseHandler{
-		courseService: courseService,
-	}
+func ConnectStudentRouter(apiRouter *gin.RouterGroup, dbClient *ent.Client) {
+	studentCourseHandler := student.NewStudentCourseHandler(dbClient)
+	studentRouter := apiRouter.Group("/student")
+	studentRouter.GET("/my_courses", studentCourseHandler.GetCourses)
+	studentRouter.POST("/create_course", studentCourseHandler.CreateCourse)
 }

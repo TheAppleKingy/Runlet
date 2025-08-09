@@ -242,6 +242,52 @@ func HasCourseWith(preds ...predicate.Course) predicate.Problem {
 	})
 }
 
+// HasAttempts applies the HasEdge predicate on the "attempts" edge.
+func HasAttempts() predicate.Problem {
+	return predicate.Problem(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AttemptsTable, AttemptsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAttemptsWith applies the HasEdge predicate on the "attempts" edge with a given conditions (other predicates).
+func HasAttemptsWith(preds ...predicate.Attempt) predicate.Problem {
+	return predicate.Problem(func(s *sql.Selector) {
+		step := newAttemptsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasStudents applies the HasEdge predicate on the "students" edge.
+func HasStudents() predicate.Problem {
+	return predicate.Problem(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, StudentsTable, StudentsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasStudentsWith applies the HasEdge predicate on the "students" edge with a given conditions (other predicates).
+func HasStudentsWith(preds ...predicate.Student) predicate.Problem {
+	return predicate.Problem(func(s *sql.Selector) {
+		step := newStudentsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Problem) predicate.Problem {
 	return predicate.Problem(sql.AndPredicates(predicates...))

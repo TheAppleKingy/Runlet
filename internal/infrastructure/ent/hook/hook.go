@@ -8,6 +8,30 @@ import (
 	"fmt"
 )
 
+// The AttemptFunc type is an adapter to allow the use of ordinary
+// function as Attempt mutator.
+type AttemptFunc func(context.Context, *ent.AttemptMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AttemptFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AttemptMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AttemptMutation", m)
+}
+
+// The ClassFunc type is an adapter to allow the use of ordinary
+// function as Class mutator.
+type ClassFunc func(context.Context, *ent.ClassMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ClassFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ClassMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ClassMutation", m)
+}
+
 // The CourseFunc type is an adapter to allow the use of ordinary
 // function as Course mutator.
 type CourseFunc func(context.Context, *ent.CourseMutation) (ent.Value, error)
@@ -30,6 +54,30 @@ func (f ProblemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProblemMutation", m)
+}
+
+// The StudentFunc type is an adapter to allow the use of ordinary
+// function as Student mutator.
+type StudentFunc func(context.Context, *ent.StudentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StudentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StudentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StudentMutation", m)
+}
+
+// The TeacherFunc type is an adapter to allow the use of ordinary
+// function as Teacher mutator.
+type TeacherFunc func(context.Context, *ent.TeacherMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TeacherFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TeacherMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TeacherMutation", m)
 }
 
 // Condition is a hook condition function.
