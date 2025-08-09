@@ -3,9 +3,11 @@
 package ent
 
 import (
+	"Runlet/internal/infrastructure/ent/attempt"
 	"Runlet/internal/infrastructure/ent/course"
 	"Runlet/internal/infrastructure/ent/predicate"
 	"Runlet/internal/infrastructure/ent/problem"
+	"Runlet/internal/infrastructure/ent/student"
 	"context"
 	"errors"
 	"fmt"
@@ -75,6 +77,36 @@ func (_u *ProblemUpdate) SetCourse(v *Course) *ProblemUpdate {
 	return _u.SetCourseID(v.ID)
 }
 
+// AddAttemptIDs adds the "attempts" edge to the Attempt entity by IDs.
+func (_u *ProblemUpdate) AddAttemptIDs(ids ...int) *ProblemUpdate {
+	_u.mutation.AddAttemptIDs(ids...)
+	return _u
+}
+
+// AddAttempts adds the "attempts" edges to the Attempt entity.
+func (_u *ProblemUpdate) AddAttempts(v ...*Attempt) *ProblemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAttemptIDs(ids...)
+}
+
+// AddStudentIDs adds the "students" edge to the Student entity by IDs.
+func (_u *ProblemUpdate) AddStudentIDs(ids ...int) *ProblemUpdate {
+	_u.mutation.AddStudentIDs(ids...)
+	return _u
+}
+
+// AddStudents adds the "students" edges to the Student entity.
+func (_u *ProblemUpdate) AddStudents(v ...*Student) *ProblemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddStudentIDs(ids...)
+}
+
 // Mutation returns the ProblemMutation object of the builder.
 func (_u *ProblemUpdate) Mutation() *ProblemMutation {
 	return _u.mutation
@@ -84,6 +116,48 @@ func (_u *ProblemUpdate) Mutation() *ProblemMutation {
 func (_u *ProblemUpdate) ClearCourse() *ProblemUpdate {
 	_u.mutation.ClearCourse()
 	return _u
+}
+
+// ClearAttempts clears all "attempts" edges to the Attempt entity.
+func (_u *ProblemUpdate) ClearAttempts() *ProblemUpdate {
+	_u.mutation.ClearAttempts()
+	return _u
+}
+
+// RemoveAttemptIDs removes the "attempts" edge to Attempt entities by IDs.
+func (_u *ProblemUpdate) RemoveAttemptIDs(ids ...int) *ProblemUpdate {
+	_u.mutation.RemoveAttemptIDs(ids...)
+	return _u
+}
+
+// RemoveAttempts removes "attempts" edges to Attempt entities.
+func (_u *ProblemUpdate) RemoveAttempts(v ...*Attempt) *ProblemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAttemptIDs(ids...)
+}
+
+// ClearStudents clears all "students" edges to the Student entity.
+func (_u *ProblemUpdate) ClearStudents() *ProblemUpdate {
+	_u.mutation.ClearStudents()
+	return _u
+}
+
+// RemoveStudentIDs removes the "students" edge to Student entities by IDs.
+func (_u *ProblemUpdate) RemoveStudentIDs(ids ...int) *ProblemUpdate {
+	_u.mutation.RemoveStudentIDs(ids...)
+	return _u
+}
+
+// RemoveStudents removes "students" edges to Student entities.
+func (_u *ProblemUpdate) RemoveStudents(v ...*Student) *ProblemUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveStudentIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -115,6 +189,11 @@ func (_u *ProblemUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *ProblemUpdate) check() error {
+	if v, ok := _u.mutation.Title(); ok {
+		if err := problem.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Problem.title": %w`, err)}
+		}
+	}
 	if _u.mutation.CourseCleared() && len(_u.mutation.CourseIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Problem.course"`)
 	}
@@ -161,6 +240,96 @@ func (_u *ProblemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AttemptsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.AttemptsTable,
+			Columns: []string{problem.AttemptsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(attempt.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAttemptsIDs(); len(nodes) > 0 && !_u.mutation.AttemptsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.AttemptsTable,
+			Columns: []string{problem.AttemptsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(attempt.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AttemptsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.AttemptsTable,
+			Columns: []string{problem.AttemptsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(attempt.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.StudentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   problem.StudentsTable,
+			Columns: problem.StudentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedStudentsIDs(); len(nodes) > 0 && !_u.mutation.StudentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   problem.StudentsTable,
+			Columns: problem.StudentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.StudentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   problem.StudentsTable,
+			Columns: problem.StudentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -235,6 +404,36 @@ func (_u *ProblemUpdateOne) SetCourse(v *Course) *ProblemUpdateOne {
 	return _u.SetCourseID(v.ID)
 }
 
+// AddAttemptIDs adds the "attempts" edge to the Attempt entity by IDs.
+func (_u *ProblemUpdateOne) AddAttemptIDs(ids ...int) *ProblemUpdateOne {
+	_u.mutation.AddAttemptIDs(ids...)
+	return _u
+}
+
+// AddAttempts adds the "attempts" edges to the Attempt entity.
+func (_u *ProblemUpdateOne) AddAttempts(v ...*Attempt) *ProblemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAttemptIDs(ids...)
+}
+
+// AddStudentIDs adds the "students" edge to the Student entity by IDs.
+func (_u *ProblemUpdateOne) AddStudentIDs(ids ...int) *ProblemUpdateOne {
+	_u.mutation.AddStudentIDs(ids...)
+	return _u
+}
+
+// AddStudents adds the "students" edges to the Student entity.
+func (_u *ProblemUpdateOne) AddStudents(v ...*Student) *ProblemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddStudentIDs(ids...)
+}
+
 // Mutation returns the ProblemMutation object of the builder.
 func (_u *ProblemUpdateOne) Mutation() *ProblemMutation {
 	return _u.mutation
@@ -244,6 +443,48 @@ func (_u *ProblemUpdateOne) Mutation() *ProblemMutation {
 func (_u *ProblemUpdateOne) ClearCourse() *ProblemUpdateOne {
 	_u.mutation.ClearCourse()
 	return _u
+}
+
+// ClearAttempts clears all "attempts" edges to the Attempt entity.
+func (_u *ProblemUpdateOne) ClearAttempts() *ProblemUpdateOne {
+	_u.mutation.ClearAttempts()
+	return _u
+}
+
+// RemoveAttemptIDs removes the "attempts" edge to Attempt entities by IDs.
+func (_u *ProblemUpdateOne) RemoveAttemptIDs(ids ...int) *ProblemUpdateOne {
+	_u.mutation.RemoveAttemptIDs(ids...)
+	return _u
+}
+
+// RemoveAttempts removes "attempts" edges to Attempt entities.
+func (_u *ProblemUpdateOne) RemoveAttempts(v ...*Attempt) *ProblemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAttemptIDs(ids...)
+}
+
+// ClearStudents clears all "students" edges to the Student entity.
+func (_u *ProblemUpdateOne) ClearStudents() *ProblemUpdateOne {
+	_u.mutation.ClearStudents()
+	return _u
+}
+
+// RemoveStudentIDs removes the "students" edge to Student entities by IDs.
+func (_u *ProblemUpdateOne) RemoveStudentIDs(ids ...int) *ProblemUpdateOne {
+	_u.mutation.RemoveStudentIDs(ids...)
+	return _u
+}
+
+// RemoveStudents removes "students" edges to Student entities.
+func (_u *ProblemUpdateOne) RemoveStudents(v ...*Student) *ProblemUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveStudentIDs(ids...)
 }
 
 // Where appends a list predicates to the ProblemUpdate builder.
@@ -288,6 +529,11 @@ func (_u *ProblemUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (_u *ProblemUpdateOne) check() error {
+	if v, ok := _u.mutation.Title(); ok {
+		if err := problem.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Problem.title": %w`, err)}
+		}
+	}
 	if _u.mutation.CourseCleared() && len(_u.mutation.CourseIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Problem.course"`)
 	}
@@ -351,6 +597,96 @@ func (_u *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err er
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AttemptsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.AttemptsTable,
+			Columns: []string{problem.AttemptsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(attempt.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAttemptsIDs(); len(nodes) > 0 && !_u.mutation.AttemptsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.AttemptsTable,
+			Columns: []string{problem.AttemptsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(attempt.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AttemptsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.AttemptsTable,
+			Columns: []string{problem.AttemptsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(attempt.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.StudentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   problem.StudentsTable,
+			Columns: problem.StudentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedStudentsIDs(); len(nodes) > 0 && !_u.mutation.StudentsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   problem.StudentsTable,
+			Columns: problem.StudentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.StudentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   problem.StudentsTable,
+			Columns: problem.StudentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

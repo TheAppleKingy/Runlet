@@ -3,9 +3,11 @@
 package ent
 
 import (
+	"Runlet/internal/infrastructure/ent/class"
 	"Runlet/internal/infrastructure/ent/course"
 	"Runlet/internal/infrastructure/ent/predicate"
 	"Runlet/internal/infrastructure/ent/problem"
+	"Runlet/internal/infrastructure/ent/teacher"
 	"context"
 	"errors"
 	"fmt"
@@ -71,6 +73,36 @@ func (_u *CourseUpdate) AddProblems(v ...*Problem) *CourseUpdate {
 	return _u.AddProblemIDs(ids...)
 }
 
+// AddClassIDs adds the "classes" edge to the Class entity by IDs.
+func (_u *CourseUpdate) AddClassIDs(ids ...int) *CourseUpdate {
+	_u.mutation.AddClassIDs(ids...)
+	return _u
+}
+
+// AddClasses adds the "classes" edges to the Class entity.
+func (_u *CourseUpdate) AddClasses(v ...*Class) *CourseUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddClassIDs(ids...)
+}
+
+// AddTeacherIDs adds the "teachers" edge to the Teacher entity by IDs.
+func (_u *CourseUpdate) AddTeacherIDs(ids ...int) *CourseUpdate {
+	_u.mutation.AddTeacherIDs(ids...)
+	return _u
+}
+
+// AddTeachers adds the "teachers" edges to the Teacher entity.
+func (_u *CourseUpdate) AddTeachers(v ...*Teacher) *CourseUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTeacherIDs(ids...)
+}
+
 // Mutation returns the CourseMutation object of the builder.
 func (_u *CourseUpdate) Mutation() *CourseMutation {
 	return _u.mutation
@@ -95,6 +127,48 @@ func (_u *CourseUpdate) RemoveProblems(v ...*Problem) *CourseUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveProblemIDs(ids...)
+}
+
+// ClearClasses clears all "classes" edges to the Class entity.
+func (_u *CourseUpdate) ClearClasses() *CourseUpdate {
+	_u.mutation.ClearClasses()
+	return _u
+}
+
+// RemoveClassIDs removes the "classes" edge to Class entities by IDs.
+func (_u *CourseUpdate) RemoveClassIDs(ids ...int) *CourseUpdate {
+	_u.mutation.RemoveClassIDs(ids...)
+	return _u
+}
+
+// RemoveClasses removes "classes" edges to Class entities.
+func (_u *CourseUpdate) RemoveClasses(v ...*Class) *CourseUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveClassIDs(ids...)
+}
+
+// ClearTeachers clears all "teachers" edges to the Teacher entity.
+func (_u *CourseUpdate) ClearTeachers() *CourseUpdate {
+	_u.mutation.ClearTeachers()
+	return _u
+}
+
+// RemoveTeacherIDs removes the "teachers" edge to Teacher entities by IDs.
+func (_u *CourseUpdate) RemoveTeacherIDs(ids ...int) *CourseUpdate {
+	_u.mutation.RemoveTeacherIDs(ids...)
+	return _u
+}
+
+// RemoveTeachers removes "teachers" edges to Teacher entities.
+func (_u *CourseUpdate) RemoveTeachers(v ...*Teacher) *CourseUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTeacherIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -184,6 +258,96 @@ func (_u *CourseUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.ClassesTable,
+			Columns: course.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(class.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedClassesIDs(); len(nodes) > 0 && !_u.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.ClassesTable,
+			Columns: course.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(class.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ClassesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.ClassesTable,
+			Columns: course.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(class.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TeachersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.TeachersTable,
+			Columns: course.TeachersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(teacher.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTeachersIDs(); len(nodes) > 0 && !_u.mutation.TeachersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.TeachersTable,
+			Columns: course.TeachersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(teacher.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TeachersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.TeachersTable,
+			Columns: course.TeachersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(teacher.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{course.Label}
@@ -247,6 +411,36 @@ func (_u *CourseUpdateOne) AddProblems(v ...*Problem) *CourseUpdateOne {
 	return _u.AddProblemIDs(ids...)
 }
 
+// AddClassIDs adds the "classes" edge to the Class entity by IDs.
+func (_u *CourseUpdateOne) AddClassIDs(ids ...int) *CourseUpdateOne {
+	_u.mutation.AddClassIDs(ids...)
+	return _u
+}
+
+// AddClasses adds the "classes" edges to the Class entity.
+func (_u *CourseUpdateOne) AddClasses(v ...*Class) *CourseUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddClassIDs(ids...)
+}
+
+// AddTeacherIDs adds the "teachers" edge to the Teacher entity by IDs.
+func (_u *CourseUpdateOne) AddTeacherIDs(ids ...int) *CourseUpdateOne {
+	_u.mutation.AddTeacherIDs(ids...)
+	return _u
+}
+
+// AddTeachers adds the "teachers" edges to the Teacher entity.
+func (_u *CourseUpdateOne) AddTeachers(v ...*Teacher) *CourseUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddTeacherIDs(ids...)
+}
+
 // Mutation returns the CourseMutation object of the builder.
 func (_u *CourseUpdateOne) Mutation() *CourseMutation {
 	return _u.mutation
@@ -271,6 +465,48 @@ func (_u *CourseUpdateOne) RemoveProblems(v ...*Problem) *CourseUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveProblemIDs(ids...)
+}
+
+// ClearClasses clears all "classes" edges to the Class entity.
+func (_u *CourseUpdateOne) ClearClasses() *CourseUpdateOne {
+	_u.mutation.ClearClasses()
+	return _u
+}
+
+// RemoveClassIDs removes the "classes" edge to Class entities by IDs.
+func (_u *CourseUpdateOne) RemoveClassIDs(ids ...int) *CourseUpdateOne {
+	_u.mutation.RemoveClassIDs(ids...)
+	return _u
+}
+
+// RemoveClasses removes "classes" edges to Class entities.
+func (_u *CourseUpdateOne) RemoveClasses(v ...*Class) *CourseUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveClassIDs(ids...)
+}
+
+// ClearTeachers clears all "teachers" edges to the Teacher entity.
+func (_u *CourseUpdateOne) ClearTeachers() *CourseUpdateOne {
+	_u.mutation.ClearTeachers()
+	return _u
+}
+
+// RemoveTeacherIDs removes the "teachers" edge to Teacher entities by IDs.
+func (_u *CourseUpdateOne) RemoveTeacherIDs(ids ...int) *CourseUpdateOne {
+	_u.mutation.RemoveTeacherIDs(ids...)
+	return _u
+}
+
+// RemoveTeachers removes "teachers" edges to Teacher entities.
+func (_u *CourseUpdateOne) RemoveTeachers(v ...*Teacher) *CourseUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveTeacherIDs(ids...)
 }
 
 // Where appends a list predicates to the CourseUpdate builder.
@@ -383,6 +619,96 @@ func (_u *CourseUpdateOne) sqlSave(ctx context.Context) (_node *Course, err erro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.ClassesTable,
+			Columns: course.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(class.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedClassesIDs(); len(nodes) > 0 && !_u.mutation.ClassesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.ClassesTable,
+			Columns: course.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(class.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ClassesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.ClassesTable,
+			Columns: course.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(class.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.TeachersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.TeachersTable,
+			Columns: course.TeachersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(teacher.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedTeachersIDs(); len(nodes) > 0 && !_u.mutation.TeachersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.TeachersTable,
+			Columns: course.TeachersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(teacher.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TeachersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.TeachersTable,
+			Columns: course.TeachersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(teacher.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

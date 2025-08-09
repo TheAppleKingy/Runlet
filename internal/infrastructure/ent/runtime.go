@@ -2,8 +2,51 @@
 
 package ent
 
+import (
+	"Runlet/internal/infrastructure/ent/attempt"
+	"Runlet/internal/infrastructure/ent/class"
+	"Runlet/internal/infrastructure/ent/problem"
+	"Runlet/internal/infrastructure/ent/schema"
+	"Runlet/internal/infrastructure/ent/student"
+	"Runlet/internal/infrastructure/ent/teacher"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	attemptFields := schema.Attempt{}.Fields()
+	_ = attemptFields
+	// attemptDescAmount is the schema descriptor for amount field.
+	attemptDescAmount := attemptFields[0].Descriptor()
+	// attempt.DefaultAmount holds the default value on creation for the amount field.
+	attempt.DefaultAmount = attemptDescAmount.Default.(uint)
+	// attemptDescDone is the schema descriptor for done field.
+	attemptDescDone := attemptFields[1].Descriptor()
+	// attempt.DefaultDone holds the default value on creation for the done field.
+	attempt.DefaultDone = attemptDescDone.Default.(bool)
+	classFields := schema.Class{}.Fields()
+	_ = classFields
+	// classDescNumber is the schema descriptor for number field.
+	classDescNumber := classFields[0].Descriptor()
+	// class.NumberValidator is a validator for the "number" field. It is called by the builders before save.
+	class.NumberValidator = classDescNumber.Validators[0].(func(string) error)
+	problemFields := schema.Problem{}.Fields()
+	_ = problemFields
+	// problemDescTitle is the schema descriptor for title field.
+	problemDescTitle := problemFields[0].Descriptor()
+	// problem.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	problem.TitleValidator = problemDescTitle.Validators[0].(func(string) error)
+	studentFields := schema.Student{}.Fields()
+	_ = studentFields
+	// studentDescName is the schema descriptor for name field.
+	studentDescName := studentFields[0].Descriptor()
+	// student.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	student.NameValidator = studentDescName.Validators[0].(func(string) error)
+	teacherFields := schema.Teacher{}.Fields()
+	_ = teacherFields
+	// teacherDescName is the schema descriptor for name field.
+	teacherDescName := teacherFields[0].Descriptor()
+	// teacher.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	teacher.NameValidator = teacherDescName.Validators[0].(func(string) error)
 }

@@ -33,9 +33,13 @@ type Problem struct {
 type ProblemEdges struct {
 	// Course holds the value of the course edge.
 	Course *Course `json:"course,omitempty"`
+	// Attempts holds the value of the attempts edge.
+	Attempts []*Attempt `json:"attempts,omitempty"`
+	// Students holds the value of the students edge.
+	Students []*Student `json:"students,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // CourseOrErr returns the Course value or an error if the edge
@@ -47,6 +51,24 @@ func (e ProblemEdges) CourseOrErr() (*Course, error) {
 		return nil, &NotFoundError{label: course.Label}
 	}
 	return nil, &NotLoadedError{edge: "course"}
+}
+
+// AttemptsOrErr returns the Attempts value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProblemEdges) AttemptsOrErr() ([]*Attempt, error) {
+	if e.loadedTypes[1] {
+		return e.Attempts, nil
+	}
+	return nil, &NotLoadedError{edge: "attempts"}
+}
+
+// StudentsOrErr returns the Students value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProblemEdges) StudentsOrErr() ([]*Student, error) {
+	if e.loadedTypes[2] {
+		return e.Students, nil
+	}
+	return nil, &NotLoadedError{edge: "students"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -113,6 +135,16 @@ func (_m *Problem) Value(name string) (ent.Value, error) {
 // QueryCourse queries the "course" edge of the Problem entity.
 func (_m *Problem) QueryCourse() *CourseQuery {
 	return NewProblemClient(_m.config).QueryCourse(_m)
+}
+
+// QueryAttempts queries the "attempts" edge of the Problem entity.
+func (_m *Problem) QueryAttempts() *AttemptQuery {
+	return NewProblemClient(_m.config).QueryAttempts(_m)
+}
+
+// QueryStudents queries the "students" edge of the Problem entity.
+func (_m *Problem) QueryStudents() *StudentQuery {
+	return NewProblemClient(_m.config).QueryStudents(_m)
 }
 
 // Update returns a builder for updating this Problem.

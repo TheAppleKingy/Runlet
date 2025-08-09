@@ -3,11 +3,11 @@
 package ent
 
 import (
+	"Runlet/internal/infrastructure/ent/attempt"
 	"Runlet/internal/infrastructure/ent/class"
-	"Runlet/internal/infrastructure/ent/course"
 	"Runlet/internal/infrastructure/ent/predicate"
 	"Runlet/internal/infrastructure/ent/problem"
-	"Runlet/internal/infrastructure/ent/teacher"
+	"Runlet/internal/infrastructure/ent/student"
 	"context"
 	"database/sql/driver"
 	"fmt"
@@ -19,54 +19,76 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// CourseQuery is the builder for querying Course entities.
-type CourseQuery struct {
+// StudentQuery is the builder for querying Student entities.
+type StudentQuery struct {
 	config
 	ctx          *QueryContext
-	order        []course.OrderOption
+	order        []student.OrderOption
 	inters       []Interceptor
-	predicates   []predicate.Course
+	predicates   []predicate.Student
+	withAttempts *AttemptQuery
 	withProblems *ProblemQuery
-	withClasses  *ClassQuery
-	withTeachers *TeacherQuery
+	withClass    *ClassQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the CourseQuery builder.
-func (_q *CourseQuery) Where(ps ...predicate.Course) *CourseQuery {
+// Where adds a new predicate for the StudentQuery builder.
+func (_q *StudentQuery) Where(ps ...predicate.Student) *StudentQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *CourseQuery) Limit(limit int) *CourseQuery {
+func (_q *StudentQuery) Limit(limit int) *StudentQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *CourseQuery) Offset(offset int) *CourseQuery {
+func (_q *StudentQuery) Offset(offset int) *StudentQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *CourseQuery) Unique(unique bool) *CourseQuery {
+func (_q *StudentQuery) Unique(unique bool) *StudentQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *CourseQuery) Order(o ...course.OrderOption) *CourseQuery {
+func (_q *StudentQuery) Order(o ...student.OrderOption) *StudentQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
+// QueryAttempts chains the current query on the "attempts" edge.
+func (_q *StudentQuery) QueryAttempts() *AttemptQuery {
+	query := (&AttemptClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(student.Table, student.FieldID, selector),
+			sqlgraph.To(attempt.Table, attempt.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, student.AttemptsTable, student.AttemptsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryProblems chains the current query on the "problems" edge.
-func (_q *CourseQuery) QueryProblems() *ProblemQuery {
+func (_q *StudentQuery) QueryProblems() *ProblemQuery {
 	query := (&ProblemClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -77,9 +99,9 @@ func (_q *CourseQuery) QueryProblems() *ProblemQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(course.Table, course.FieldID, selector),
+			sqlgraph.From(student.Table, student.FieldID, selector),
 			sqlgraph.To(problem.Table, problem.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, course.ProblemsTable, course.ProblemsColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, student.ProblemsTable, student.ProblemsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -87,8 +109,8 @@ func (_q *CourseQuery) QueryProblems() *ProblemQuery {
 	return query
 }
 
-// QueryClasses chains the current query on the "classes" edge.
-func (_q *CourseQuery) QueryClasses() *ClassQuery {
+// QueryClass chains the current query on the "class" edge.
+func (_q *StudentQuery) QueryClass() *ClassQuery {
 	query := (&ClassClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := _q.prepareQuery(ctx); err != nil {
@@ -99,9 +121,9 @@ func (_q *CourseQuery) QueryClasses() *ClassQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(course.Table, course.FieldID, selector),
+			sqlgraph.From(student.Table, student.FieldID, selector),
 			sqlgraph.To(class.Table, class.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, course.ClassesTable, course.ClassesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, student.ClassTable, student.ClassColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -109,43 +131,21 @@ func (_q *CourseQuery) QueryClasses() *ClassQuery {
 	return query
 }
 
-// QueryTeachers chains the current query on the "teachers" edge.
-func (_q *CourseQuery) QueryTeachers() *TeacherQuery {
-	query := (&TeacherClient{config: _q.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := _q.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := _q.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(course.Table, course.FieldID, selector),
-			sqlgraph.To(teacher.Table, teacher.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, course.TeachersTable, course.TeachersPrimaryKey...),
-		)
-		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// First returns the first Course entity from the query.
-// Returns a *NotFoundError when no Course was found.
-func (_q *CourseQuery) First(ctx context.Context) (*Course, error) {
+// First returns the first Student entity from the query.
+// Returns a *NotFoundError when no Student was found.
+func (_q *StudentQuery) First(ctx context.Context) (*Student, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{course.Label}
+		return nil, &NotFoundError{student.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *CourseQuery) FirstX(ctx context.Context) *Course {
+func (_q *StudentQuery) FirstX(ctx context.Context) *Student {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -153,22 +153,22 @@ func (_q *CourseQuery) FirstX(ctx context.Context) *Course {
 	return node
 }
 
-// FirstID returns the first Course ID from the query.
-// Returns a *NotFoundError when no Course ID was found.
-func (_q *CourseQuery) FirstID(ctx context.Context) (id int, err error) {
+// FirstID returns the first Student ID from the query.
+// Returns a *NotFoundError when no Student ID was found.
+func (_q *StudentQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{course.Label}
+		err = &NotFoundError{student.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *CourseQuery) FirstIDX(ctx context.Context) int {
+func (_q *StudentQuery) FirstIDX(ctx context.Context) int {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -176,10 +176,10 @@ func (_q *CourseQuery) FirstIDX(ctx context.Context) int {
 	return id
 }
 
-// Only returns a single Course entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Course entity is found.
-// Returns a *NotFoundError when no Course entities are found.
-func (_q *CourseQuery) Only(ctx context.Context) (*Course, error) {
+// Only returns a single Student entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one Student entity is found.
+// Returns a *NotFoundError when no Student entities are found.
+func (_q *StudentQuery) Only(ctx context.Context) (*Student, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -188,14 +188,14 @@ func (_q *CourseQuery) Only(ctx context.Context) (*Course, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{course.Label}
+		return nil, &NotFoundError{student.Label}
 	default:
-		return nil, &NotSingularError{course.Label}
+		return nil, &NotSingularError{student.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *CourseQuery) OnlyX(ctx context.Context) *Course {
+func (_q *StudentQuery) OnlyX(ctx context.Context) *Student {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -203,10 +203,10 @@ func (_q *CourseQuery) OnlyX(ctx context.Context) *Course {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Course ID in the query.
-// Returns a *NotSingularError when more than one Course ID is found.
+// OnlyID is like Only, but returns the only Student ID in the query.
+// Returns a *NotSingularError when more than one Student ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *CourseQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *StudentQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -215,15 +215,15 @@ func (_q *CourseQuery) OnlyID(ctx context.Context) (id int, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{course.Label}
+		err = &NotFoundError{student.Label}
 	default:
-		err = &NotSingularError{course.Label}
+		err = &NotSingularError{student.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *CourseQuery) OnlyIDX(ctx context.Context) int {
+func (_q *StudentQuery) OnlyIDX(ctx context.Context) int {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -231,18 +231,18 @@ func (_q *CourseQuery) OnlyIDX(ctx context.Context) int {
 	return id
 }
 
-// All executes the query and returns a list of Courses.
-func (_q *CourseQuery) All(ctx context.Context) ([]*Course, error) {
+// All executes the query and returns a list of Students.
+func (_q *StudentQuery) All(ctx context.Context) ([]*Student, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Course, *CourseQuery]()
-	return withInterceptors[[]*Course](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*Student, *StudentQuery]()
+	return withInterceptors[[]*Student](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *CourseQuery) AllX(ctx context.Context) []*Course {
+func (_q *StudentQuery) AllX(ctx context.Context) []*Student {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -250,20 +250,20 @@ func (_q *CourseQuery) AllX(ctx context.Context) []*Course {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Course IDs.
-func (_q *CourseQuery) IDs(ctx context.Context) (ids []int, err error) {
+// IDs executes the query and returns a list of Student IDs.
+func (_q *StudentQuery) IDs(ctx context.Context) (ids []int, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(course.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(student.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *CourseQuery) IDsX(ctx context.Context) []int {
+func (_q *StudentQuery) IDsX(ctx context.Context) []int {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -272,16 +272,16 @@ func (_q *CourseQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (_q *CourseQuery) Count(ctx context.Context) (int, error) {
+func (_q *StudentQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*CourseQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*StudentQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *CourseQuery) CountX(ctx context.Context) int {
+func (_q *StudentQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -290,7 +290,7 @@ func (_q *CourseQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *CourseQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *StudentQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -303,7 +303,7 @@ func (_q *CourseQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *CourseQuery) ExistX(ctx context.Context) bool {
+func (_q *StudentQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -311,30 +311,41 @@ func (_q *CourseQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the CourseQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the StudentQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *CourseQuery) Clone() *CourseQuery {
+func (_q *StudentQuery) Clone() *StudentQuery {
 	if _q == nil {
 		return nil
 	}
-	return &CourseQuery{
+	return &StudentQuery{
 		config:       _q.config,
 		ctx:          _q.ctx.Clone(),
-		order:        append([]course.OrderOption{}, _q.order...),
+		order:        append([]student.OrderOption{}, _q.order...),
 		inters:       append([]Interceptor{}, _q.inters...),
-		predicates:   append([]predicate.Course{}, _q.predicates...),
+		predicates:   append([]predicate.Student{}, _q.predicates...),
+		withAttempts: _q.withAttempts.Clone(),
 		withProblems: _q.withProblems.Clone(),
-		withClasses:  _q.withClasses.Clone(),
-		withTeachers: _q.withTeachers.Clone(),
+		withClass:    _q.withClass.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
 }
 
+// WithAttempts tells the query-builder to eager-load the nodes that are connected to
+// the "attempts" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *StudentQuery) WithAttempts(opts ...func(*AttemptQuery)) *StudentQuery {
+	query := (&AttemptClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAttempts = query
+	return _q
+}
+
 // WithProblems tells the query-builder to eager-load the nodes that are connected to
 // the "problems" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *CourseQuery) WithProblems(opts ...func(*ProblemQuery)) *CourseQuery {
+func (_q *StudentQuery) WithProblems(opts ...func(*ProblemQuery)) *StudentQuery {
 	query := (&ProblemClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
@@ -343,25 +354,14 @@ func (_q *CourseQuery) WithProblems(opts ...func(*ProblemQuery)) *CourseQuery {
 	return _q
 }
 
-// WithClasses tells the query-builder to eager-load the nodes that are connected to
-// the "classes" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *CourseQuery) WithClasses(opts ...func(*ClassQuery)) *CourseQuery {
+// WithClass tells the query-builder to eager-load the nodes that are connected to
+// the "class" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *StudentQuery) WithClass(opts ...func(*ClassQuery)) *StudentQuery {
 	query := (&ClassClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	_q.withClasses = query
-	return _q
-}
-
-// WithTeachers tells the query-builder to eager-load the nodes that are connected to
-// the "teachers" edge. The optional arguments are used to configure the query builder of the edge.
-func (_q *CourseQuery) WithTeachers(opts ...func(*TeacherQuery)) *CourseQuery {
-	query := (&TeacherClient{config: _q.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	_q.withTeachers = query
+	_q.withClass = query
 	return _q
 }
 
@@ -371,19 +371,19 @@ func (_q *CourseQuery) WithTeachers(opts ...func(*TeacherQuery)) *CourseQuery {
 // Example:
 //
 //	var v []struct {
-//		Title string `json:"title,omitempty"`
+//		Name string `json:"name,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Course.Query().
-//		GroupBy(course.FieldTitle).
+//	client.Student.Query().
+//		GroupBy(student.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *CourseQuery) GroupBy(field string, fields ...string) *CourseGroupBy {
+func (_q *StudentQuery) GroupBy(field string, fields ...string) *StudentGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &CourseGroupBy{build: _q}
+	grbuild := &StudentGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = course.Label
+	grbuild.label = student.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -394,26 +394,26 @@ func (_q *CourseQuery) GroupBy(field string, fields ...string) *CourseGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Title string `json:"title,omitempty"`
+//		Name string `json:"name,omitempty"`
 //	}
 //
-//	client.Course.Query().
-//		Select(course.FieldTitle).
+//	client.Student.Query().
+//		Select(student.FieldName).
 //		Scan(ctx, &v)
-func (_q *CourseQuery) Select(fields ...string) *CourseSelect {
+func (_q *StudentQuery) Select(fields ...string) *StudentSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &CourseSelect{CourseQuery: _q}
-	sbuild.label = course.Label
+	sbuild := &StudentSelect{StudentQuery: _q}
+	sbuild.label = student.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a CourseSelect configured with the given aggregations.
-func (_q *CourseQuery) Aggregate(fns ...AggregateFunc) *CourseSelect {
+// Aggregate returns a StudentSelect configured with the given aggregations.
+func (_q *StudentQuery) Aggregate(fns ...AggregateFunc) *StudentSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *CourseQuery) prepareQuery(ctx context.Context) error {
+func (_q *StudentQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -425,7 +425,7 @@ func (_q *CourseQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !course.ValidColumn(f) {
+		if !student.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -439,21 +439,21 @@ func (_q *CourseQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *CourseQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Course, error) {
+func (_q *StudentQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Student, error) {
 	var (
-		nodes       = []*Course{}
+		nodes       = []*Student{}
 		_spec       = _q.querySpec()
 		loadedTypes = [3]bool{
+			_q.withAttempts != nil,
 			_q.withProblems != nil,
-			_q.withClasses != nil,
-			_q.withTeachers != nil,
+			_q.withClass != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Course).scanValues(nil, columns)
+		return (*Student).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Course{config: _q.config}
+		node := &Student{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -467,33 +467,32 @@ func (_q *CourseQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Cours
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withAttempts; query != nil {
+		if err := _q.loadAttempts(ctx, query, nodes,
+			func(n *Student) { n.Edges.Attempts = []*Attempt{} },
+			func(n *Student, e *Attempt) { n.Edges.Attempts = append(n.Edges.Attempts, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := _q.withProblems; query != nil {
 		if err := _q.loadProblems(ctx, query, nodes,
-			func(n *Course) { n.Edges.Problems = []*Problem{} },
-			func(n *Course, e *Problem) { n.Edges.Problems = append(n.Edges.Problems, e) }); err != nil {
+			func(n *Student) { n.Edges.Problems = []*Problem{} },
+			func(n *Student, e *Problem) { n.Edges.Problems = append(n.Edges.Problems, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := _q.withClasses; query != nil {
-		if err := _q.loadClasses(ctx, query, nodes,
-			func(n *Course) { n.Edges.Classes = []*Class{} },
-			func(n *Course, e *Class) { n.Edges.Classes = append(n.Edges.Classes, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := _q.withTeachers; query != nil {
-		if err := _q.loadTeachers(ctx, query, nodes,
-			func(n *Course) { n.Edges.Teachers = []*Teacher{} },
-			func(n *Course, e *Teacher) { n.Edges.Teachers = append(n.Edges.Teachers, e) }); err != nil {
+	if query := _q.withClass; query != nil {
+		if err := _q.loadClass(ctx, query, nodes, nil,
+			func(n *Student, e *Class) { n.Edges.Class = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (_q *CourseQuery) loadProblems(ctx context.Context, query *ProblemQuery, nodes []*Course, init func(*Course), assign func(*Course, *Problem)) error {
+func (_q *StudentQuery) loadAttempts(ctx context.Context, query *AttemptQuery, nodes []*Student, init func(*Student), assign func(*Student, *Attempt)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Course)
+	nodeids := make(map[int]*Student)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -502,29 +501,29 @@ func (_q *CourseQuery) loadProblems(ctx context.Context, query *ProblemQuery, no
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(problem.FieldCourseID)
+		query.ctx.AppendFieldOnce(attempt.FieldStudentID)
 	}
-	query.Where(predicate.Problem(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(course.ProblemsColumn), fks...))
+	query.Where(predicate.Attempt(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(student.AttemptsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.CourseID
+		fk := n.StudentID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "course_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "student_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
 	return nil
 }
-func (_q *CourseQuery) loadClasses(ctx context.Context, query *ClassQuery, nodes []*Course, init func(*Course), assign func(*Course, *Class)) error {
+func (_q *StudentQuery) loadProblems(ctx context.Context, query *ProblemQuery, nodes []*Student, init func(*Student), assign func(*Student, *Problem)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Course)
-	nids := make(map[int]map[*Course]struct{})
+	byID := make(map[int]*Student)
+	nids := make(map[int]map[*Student]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -533,11 +532,11 @@ func (_q *CourseQuery) loadClasses(ctx context.Context, query *ClassQuery, nodes
 		}
 	}
 	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(course.ClassesTable)
-		s.Join(joinT).On(s.C(class.FieldID), joinT.C(course.ClassesPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(course.ClassesPrimaryKey[1]), edgeIDs...))
+		joinT := sql.Table(student.ProblemsTable)
+		s.Join(joinT).On(s.C(problem.FieldID), joinT.C(student.ProblemsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(student.ProblemsPrimaryKey[0]), edgeIDs...))
 		columns := s.SelectedColumns()
-		s.Select(joinT.C(course.ClassesPrimaryKey[1]))
+		s.Select(joinT.C(student.ProblemsPrimaryKey[0]))
 		s.AppendSelect(columns...)
 		s.SetDistinct(false)
 	})
@@ -559,7 +558,7 @@ func (_q *CourseQuery) loadClasses(ctx context.Context, query *ClassQuery, nodes
 				outValue := int(values[0].(*sql.NullInt64).Int64)
 				inValue := int(values[1].(*sql.NullInt64).Int64)
 				if nids[inValue] == nil {
-					nids[inValue] = map[*Course]struct{}{byID[outValue]: {}}
+					nids[inValue] = map[*Student]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])
 				}
 				nids[inValue][byID[outValue]] = struct{}{}
@@ -567,14 +566,14 @@ func (_q *CourseQuery) loadClasses(ctx context.Context, query *ClassQuery, nodes
 			}
 		})
 	})
-	neighbors, err := withInterceptors[[]*Class](ctx, query, qr, query.inters)
+	neighbors, err := withInterceptors[[]*Problem](ctx, query, qr, query.inters)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
 		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "classes" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected "problems" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)
@@ -582,69 +581,37 @@ func (_q *CourseQuery) loadClasses(ctx context.Context, query *ClassQuery, nodes
 	}
 	return nil
 }
-func (_q *CourseQuery) loadTeachers(ctx context.Context, query *TeacherQuery, nodes []*Course, init func(*Course), assign func(*Course, *Teacher)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Course)
-	nids := make(map[int]map[*Course]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
+func (_q *StudentQuery) loadClass(ctx context.Context, query *ClassQuery, nodes []*Student, init func(*Student), assign func(*Student, *Class)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Student)
+	for i := range nodes {
+		fk := nodes[i].ClassID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
 		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(course.TeachersTable)
-		s.Join(joinT).On(s.C(teacher.FieldID), joinT.C(course.TeachersPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(course.TeachersPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(course.TeachersPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(ids) == 0 {
+		return nil
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Course]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Teacher](ctx, query, qr, query.inters)
+	query.Where(class.IDIn(ids...))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "teachers" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "class_id" returned %v`, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil
 }
 
-func (_q *CourseQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *StudentQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -653,8 +620,8 @@ func (_q *CourseQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *CourseQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(course.Table, course.Columns, sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt))
+func (_q *StudentQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(student.Table, student.Columns, sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -663,11 +630,14 @@ func (_q *CourseQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, course.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, student.FieldID)
 		for i := range fields {
-			if fields[i] != course.FieldID {
+			if fields[i] != student.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withClass != nil {
+			_spec.Node.AddColumnOnce(student.FieldClassID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {
@@ -693,12 +663,12 @@ func (_q *CourseQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *CourseQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *StudentQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(course.Table)
+	t1 := builder.Table(student.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = course.Columns
+		columns = student.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -725,28 +695,28 @@ func (_q *CourseQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// CourseGroupBy is the group-by builder for Course entities.
-type CourseGroupBy struct {
+// StudentGroupBy is the group-by builder for Student entities.
+type StudentGroupBy struct {
 	selector
-	build *CourseQuery
+	build *StudentQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *CourseGroupBy) Aggregate(fns ...AggregateFunc) *CourseGroupBy {
+func (_g *StudentGroupBy) Aggregate(fns ...AggregateFunc) *StudentGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *CourseGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *StudentGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CourseQuery, *CourseGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*StudentQuery, *StudentGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *CourseGroupBy) sqlScan(ctx context.Context, root *CourseQuery, v any) error {
+func (_g *StudentGroupBy) sqlScan(ctx context.Context, root *StudentQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -773,28 +743,28 @@ func (_g *CourseGroupBy) sqlScan(ctx context.Context, root *CourseQuery, v any) 
 	return sql.ScanSlice(rows, v)
 }
 
-// CourseSelect is the builder for selecting fields of Course entities.
-type CourseSelect struct {
-	*CourseQuery
+// StudentSelect is the builder for selecting fields of Student entities.
+type StudentSelect struct {
+	*StudentQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *CourseSelect) Aggregate(fns ...AggregateFunc) *CourseSelect {
+func (_s *StudentSelect) Aggregate(fns ...AggregateFunc) *StudentSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *CourseSelect) Scan(ctx context.Context, v any) error {
+func (_s *StudentSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CourseQuery, *CourseSelect](ctx, _s.CourseQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*StudentQuery, *StudentSelect](ctx, _s.StudentQuery, _s, _s.inters, v)
 }
 
-func (_s *CourseSelect) sqlScan(ctx context.Context, root *CourseQuery, v any) error {
+func (_s *StudentSelect) sqlScan(ctx context.Context, root *StudentQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

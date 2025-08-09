@@ -3,8 +3,10 @@
 package ent
 
 import (
+	"Runlet/internal/infrastructure/ent/attempt"
 	"Runlet/internal/infrastructure/ent/course"
 	"Runlet/internal/infrastructure/ent/problem"
+	"Runlet/internal/infrastructure/ent/student"
 	"context"
 	"errors"
 	"fmt"
@@ -43,6 +45,36 @@ func (_c *ProblemCreate) SetCourse(v *Course) *ProblemCreate {
 	return _c.SetCourseID(v.ID)
 }
 
+// AddAttemptIDs adds the "attempts" edge to the Attempt entity by IDs.
+func (_c *ProblemCreate) AddAttemptIDs(ids ...int) *ProblemCreate {
+	_c.mutation.AddAttemptIDs(ids...)
+	return _c
+}
+
+// AddAttempts adds the "attempts" edges to the Attempt entity.
+func (_c *ProblemCreate) AddAttempts(v ...*Attempt) *ProblemCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAttemptIDs(ids...)
+}
+
+// AddStudentIDs adds the "students" edge to the Student entity by IDs.
+func (_c *ProblemCreate) AddStudentIDs(ids ...int) *ProblemCreate {
+	_c.mutation.AddStudentIDs(ids...)
+	return _c
+}
+
+// AddStudents adds the "students" edges to the Student entity.
+func (_c *ProblemCreate) AddStudents(v ...*Student) *ProblemCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddStudentIDs(ids...)
+}
+
 // Mutation returns the ProblemMutation object of the builder.
 func (_c *ProblemCreate) Mutation() *ProblemMutation {
 	return _c.mutation
@@ -79,6 +111,11 @@ func (_c *ProblemCreate) ExecX(ctx context.Context) {
 func (_c *ProblemCreate) check() error {
 	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Problem.title"`)}
+	}
+	if v, ok := _c.mutation.Title(); ok {
+		if err := problem.TitleValidator(v); err != nil {
+			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Problem.title": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Problem.description"`)}
@@ -138,6 +175,38 @@ func (_c *ProblemCreate) createSpec() (*Problem, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.CourseID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AttemptsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   problem.AttemptsTable,
+			Columns: []string{problem.AttemptsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(attempt.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.StudentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   problem.StudentsTable,
+			Columns: problem.StudentsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(student.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -3,8 +3,10 @@
 package ent
 
 import (
+	"Runlet/internal/infrastructure/ent/class"
 	"Runlet/internal/infrastructure/ent/course"
 	"Runlet/internal/infrastructure/ent/problem"
+	"Runlet/internal/infrastructure/ent/teacher"
 	"context"
 	"errors"
 	"fmt"
@@ -45,6 +47,36 @@ func (_c *CourseCreate) AddProblems(v ...*Problem) *CourseCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddProblemIDs(ids...)
+}
+
+// AddClassIDs adds the "classes" edge to the Class entity by IDs.
+func (_c *CourseCreate) AddClassIDs(ids ...int) *CourseCreate {
+	_c.mutation.AddClassIDs(ids...)
+	return _c
+}
+
+// AddClasses adds the "classes" edges to the Class entity.
+func (_c *CourseCreate) AddClasses(v ...*Class) *CourseCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddClassIDs(ids...)
+}
+
+// AddTeacherIDs adds the "teachers" edge to the Teacher entity by IDs.
+func (_c *CourseCreate) AddTeacherIDs(ids ...int) *CourseCreate {
+	_c.mutation.AddTeacherIDs(ids...)
+	return _c
+}
+
+// AddTeachers adds the "teachers" edges to the Teacher entity.
+func (_c *CourseCreate) AddTeachers(v ...*Teacher) *CourseCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddTeacherIDs(ids...)
 }
 
 // Mutation returns the CourseMutation object of the builder.
@@ -130,6 +162,38 @@ func (_c *CourseCreate) createSpec() (*Course, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ClassesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.ClassesTable,
+			Columns: course.ClassesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(class.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.TeachersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   course.TeachersTable,
+			Columns: course.TeachersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(teacher.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

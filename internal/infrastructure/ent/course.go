@@ -30,9 +30,13 @@ type Course struct {
 type CourseEdges struct {
 	// Problems holds the value of the problems edge.
 	Problems []*Problem `json:"problems,omitempty"`
+	// Classes holds the value of the classes edge.
+	Classes []*Class `json:"classes,omitempty"`
+	// Teachers holds the value of the teachers edge.
+	Teachers []*Teacher `json:"teachers,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // ProblemsOrErr returns the Problems value or an error if the edge
@@ -42,6 +46,24 @@ func (e CourseEdges) ProblemsOrErr() ([]*Problem, error) {
 		return e.Problems, nil
 	}
 	return nil, &NotLoadedError{edge: "problems"}
+}
+
+// ClassesOrErr returns the Classes value or an error if the edge
+// was not loaded in eager-loading.
+func (e CourseEdges) ClassesOrErr() ([]*Class, error) {
+	if e.loadedTypes[1] {
+		return e.Classes, nil
+	}
+	return nil, &NotLoadedError{edge: "classes"}
+}
+
+// TeachersOrErr returns the Teachers value or an error if the edge
+// was not loaded in eager-loading.
+func (e CourseEdges) TeachersOrErr() ([]*Teacher, error) {
+	if e.loadedTypes[2] {
+		return e.Teachers, nil
+	}
+	return nil, &NotLoadedError{edge: "teachers"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -102,6 +124,16 @@ func (_m *Course) Value(name string) (ent.Value, error) {
 // QueryProblems queries the "problems" edge of the Course entity.
 func (_m *Course) QueryProblems() *ProblemQuery {
 	return NewCourseClient(_m.config).QueryProblems(_m)
+}
+
+// QueryClasses queries the "classes" edge of the Course entity.
+func (_m *Course) QueryClasses() *ClassQuery {
+	return NewCourseClient(_m.config).QueryClasses(_m)
+}
+
+// QueryTeachers queries the "teachers" edge of the Course entity.
+func (_m *Course) QueryTeachers() *TeacherQuery {
+	return NewCourseClient(_m.config).QueryTeachers(_m)
 }
 
 // Update returns a builder for updating this Course.

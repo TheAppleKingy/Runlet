@@ -3,8 +3,12 @@
 package ent
 
 import (
+	"Runlet/internal/infrastructure/ent/attempt"
+	"Runlet/internal/infrastructure/ent/class"
 	"Runlet/internal/infrastructure/ent/course"
 	"Runlet/internal/infrastructure/ent/problem"
+	"Runlet/internal/infrastructure/ent/student"
+	"Runlet/internal/infrastructure/ent/teacher"
 	"context"
 	"errors"
 	"fmt"
@@ -74,8 +78,12 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			attempt.Table: attempt.ValidColumn,
+			class.Table:   class.ValidColumn,
 			course.Table:  course.ValidColumn,
 			problem.Table: problem.ValidColumn,
+			student.Table: student.ValidColumn,
+			teacher.Table: teacher.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

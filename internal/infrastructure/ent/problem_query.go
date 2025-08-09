@@ -3,10 +3,13 @@
 package ent
 
 import (
+	"Runlet/internal/infrastructure/ent/attempt"
 	"Runlet/internal/infrastructure/ent/course"
 	"Runlet/internal/infrastructure/ent/predicate"
 	"Runlet/internal/infrastructure/ent/problem"
+	"Runlet/internal/infrastructure/ent/student"
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -19,11 +22,13 @@ import (
 // ProblemQuery is the builder for querying Problem entities.
 type ProblemQuery struct {
 	config
-	ctx        *QueryContext
-	order      []problem.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Problem
-	withCourse *CourseQuery
+	ctx          *QueryContext
+	order        []problem.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.Problem
+	withCourse   *CourseQuery
+	withAttempts *AttemptQuery
+	withStudents *StudentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,6 +80,50 @@ func (_q *ProblemQuery) QueryCourse() *CourseQuery {
 			sqlgraph.From(problem.Table, problem.FieldID, selector),
 			sqlgraph.To(course.Table, course.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, problem.CourseTable, problem.CourseColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAttempts chains the current query on the "attempts" edge.
+func (_q *ProblemQuery) QueryAttempts() *AttemptQuery {
+	query := (&AttemptClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(problem.Table, problem.FieldID, selector),
+			sqlgraph.To(attempt.Table, attempt.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, problem.AttemptsTable, problem.AttemptsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryStudents chains the current query on the "students" edge.
+func (_q *ProblemQuery) QueryStudents() *StudentQuery {
+	query := (&StudentClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(problem.Table, problem.FieldID, selector),
+			sqlgraph.To(student.Table, student.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, problem.StudentsTable, problem.StudentsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -269,12 +318,14 @@ func (_q *ProblemQuery) Clone() *ProblemQuery {
 		return nil
 	}
 	return &ProblemQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]problem.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Problem{}, _q.predicates...),
-		withCourse: _q.withCourse.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]problem.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.Problem{}, _q.predicates...),
+		withCourse:   _q.withCourse.Clone(),
+		withAttempts: _q.withAttempts.Clone(),
+		withStudents: _q.withStudents.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -289,6 +340,28 @@ func (_q *ProblemQuery) WithCourse(opts ...func(*CourseQuery)) *ProblemQuery {
 		opt(query)
 	}
 	_q.withCourse = query
+	return _q
+}
+
+// WithAttempts tells the query-builder to eager-load the nodes that are connected to
+// the "attempts" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ProblemQuery) WithAttempts(opts ...func(*AttemptQuery)) *ProblemQuery {
+	query := (&AttemptClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withAttempts = query
+	return _q
+}
+
+// WithStudents tells the query-builder to eager-load the nodes that are connected to
+// the "students" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ProblemQuery) WithStudents(opts ...func(*StudentQuery)) *ProblemQuery {
+	query := (&StudentClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withStudents = query
 	return _q
 }
 
@@ -370,8 +443,10 @@ func (_q *ProblemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Prob
 	var (
 		nodes       = []*Problem{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [3]bool{
 			_q.withCourse != nil,
+			_q.withAttempts != nil,
+			_q.withStudents != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -395,6 +470,20 @@ func (_q *ProblemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Prob
 	if query := _q.withCourse; query != nil {
 		if err := _q.loadCourse(ctx, query, nodes, nil,
 			func(n *Problem, e *Course) { n.Edges.Course = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withAttempts; query != nil {
+		if err := _q.loadAttempts(ctx, query, nodes,
+			func(n *Problem) { n.Edges.Attempts = []*Attempt{} },
+			func(n *Problem, e *Attempt) { n.Edges.Attempts = append(n.Edges.Attempts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withStudents; query != nil {
+		if err := _q.loadStudents(ctx, query, nodes,
+			func(n *Problem) { n.Edges.Students = []*Student{} },
+			func(n *Problem, e *Student) { n.Edges.Students = append(n.Edges.Students, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -426,6 +515,97 @@ func (_q *ProblemQuery) loadCourse(ctx context.Context, query *CourseQuery, node
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *ProblemQuery) loadAttempts(ctx context.Context, query *AttemptQuery, nodes []*Problem, init func(*Problem), assign func(*Problem, *Attempt)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Problem)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(attempt.FieldProblemID)
+	}
+	query.Where(predicate.Attempt(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(problem.AttemptsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProblemID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "problem_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *ProblemQuery) loadStudents(ctx context.Context, query *StudentQuery, nodes []*Problem, init func(*Problem), assign func(*Problem, *Student)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Problem)
+	nids := make(map[int]map[*Problem]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(problem.StudentsTable)
+		s.Join(joinT).On(s.C(student.FieldID), joinT.C(problem.StudentsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(problem.StudentsPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(problem.StudentsPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Problem]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Student](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "students" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
 		}
 	}
 	return nil
