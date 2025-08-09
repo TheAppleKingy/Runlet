@@ -8,7 +8,9 @@ import (
 
 type CourseRepositoryInterface interface {
 	GetCourseById(ctx context.Context, id int) (*ent.Course, error)
-	GetCourseByTitle(ctx context.Context, title string) (*ent.Course, error)
-	GetCourses(ctx context.Context) ([]*ent.Course, error)
-	CreateCourse(ctx context.Context, title string, description string) (*ent.Course, error)
+	GetAllCourses(ctx context.Context) ([]*ent.Course, error)
+	CreateCourse(ctx context.Context, title string, description string, classesIds []int) (*ent.Course, error)
+	DeleteCourse(ctx context.Context, id int) error
+	AddClasses(ctx context.Context, courseId int, classesIds []int) ([]*ent.Class, error)
+	DeleteClasses(ctx context.Context, courseId int, classesIds []int) ([]*ent.Student, error)
 }
