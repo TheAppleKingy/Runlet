@@ -28,6 +28,18 @@ func (_c *StudentCreate) SetName(v string) *StudentCreate {
 	return _c
 }
 
+// SetEmail sets the "email" field.
+func (_c *StudentCreate) SetEmail(v string) *StudentCreate {
+	_c.mutation.SetEmail(v)
+	return _c
+}
+
+// SetPassword sets the "password" field.
+func (_c *StudentCreate) SetPassword(v string) *StudentCreate {
+	_c.mutation.SetPassword(v)
+	return _c
+}
+
 // SetClassID sets the "class_id" field.
 func (_c *StudentCreate) SetClassID(v int) *StudentCreate {
 	_c.mutation.SetClassID(v)
@@ -111,6 +123,22 @@ func (_c *StudentCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Student.name": %w`, err)}
 		}
 	}
+	if _, ok := _c.mutation.Email(); !ok {
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "Student.email"`)}
+	}
+	if v, ok := _c.mutation.Email(); ok {
+		if err := student.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Student.email": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.Password(); !ok {
+		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "Student.password"`)}
+	}
+	if v, ok := _c.mutation.Password(); ok {
+		if err := student.PasswordValidator(v); err != nil {
+			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "Student.password": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.ClassID(); !ok {
 		return &ValidationError{Name: "class_id", err: errors.New(`ent: missing required field "Student.class_id"`)}
 	}
@@ -146,6 +174,14 @@ func (_c *StudentCreate) createSpec() (*Student, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(student.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if value, ok := _c.mutation.Email(); ok {
+		_spec.SetField(student.FieldEmail, field.TypeString, value)
+		_node.Email = value
+	}
+	if value, ok := _c.mutation.Password(); ok {
+		_spec.SetField(student.FieldPassword, field.TypeString, value)
+		_node.Password = value
 	}
 	if nodes := _c.mutation.AttemptsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

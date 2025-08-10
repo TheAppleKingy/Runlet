@@ -43,10 +43,56 @@ func init() {
 	studentDescName := studentFields[0].Descriptor()
 	// student.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	student.NameValidator = studentDescName.Validators[0].(func(string) error)
+	// studentDescEmail is the schema descriptor for email field.
+	studentDescEmail := studentFields[1].Descriptor()
+	// student.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	student.EmailValidator = func() func(string) error {
+		validators := studentDescEmail.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(email string) error {
+			for _, fn := range fns {
+				if err := fn(email); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// studentDescPassword is the schema descriptor for password field.
+	studentDescPassword := studentFields[2].Descriptor()
+	// student.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
+	student.PasswordValidator = studentDescPassword.Validators[0].(func(string) error)
 	teacherFields := schema.Teacher{}.Fields()
 	_ = teacherFields
 	// teacherDescName is the schema descriptor for name field.
 	teacherDescName := teacherFields[0].Descriptor()
 	// teacher.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	teacher.NameValidator = teacherDescName.Validators[0].(func(string) error)
+	// teacherDescEmail is the schema descriptor for email field.
+	teacherDescEmail := teacherFields[1].Descriptor()
+	// teacher.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	teacher.EmailValidator = func() func(string) error {
+		validators := teacherDescEmail.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+			validators[2].(func(string) error),
+		}
+		return func(email string) error {
+			for _, fn := range fns {
+				if err := fn(email); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// teacherDescPassword is the schema descriptor for password field.
+	teacherDescPassword := teacherFields[2].Descriptor()
+	// teacher.PasswordValidator is a validator for the "password" field. It is called by the builders before save.
+	teacher.PasswordValidator = teacherDescPassword.Validators[0].(func(string) error)
 }

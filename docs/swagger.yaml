@@ -31,21 +31,6 @@ definitions:
           $ref: '#/definitions/dto.TeacherViewDTO'
         type: array
     type: object
-  dto.CourseCreateDTO:
-    properties:
-      classes:
-        items:
-          type: integer
-        type: array
-      description:
-        type: string
-      title:
-        type: string
-    required:
-    - classes
-    - description
-    - title
-    type: object
   dto.CourseViewDTO:
     properties:
       classes:
@@ -67,6 +52,16 @@ definitions:
       title:
         type: string
     type: object
+  dto.LoginDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
   dto.ProblemViewDTO:
     properties:
       attempts:
@@ -85,6 +80,22 @@ definitions:
         type: array
       title:
         type: string
+    type: object
+  dto.RegistrationDTO:
+    properties:
+      class:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - class
+    - email
+    - name
+    - password
     type: object
   dto.StudentViewDTO:
     properties:
@@ -117,41 +128,41 @@ definitions:
 info:
   contact: {}
 paths:
-  /api/student/create_course:
+  /api/student/login:
     post:
       consumes:
       - application/json
-      description: Create course and return it
+      description: Login endpoint for student
       parameters:
-      - description: Course creation data
+      - description: Data for login student
         in: body
-        name: createData
+        name: loginData
         required: true
         schema:
-          $ref: '#/definitions/dto.CourseCreateDTO'
+          $ref: '#/definitions/dto.LoginDTO'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: logged in
           schema:
-            items:
-              $ref: '#/definitions/dto.CourseViewDTO'
-            type: array
+            additionalProperties:
+              type: string
+            type: object
         "400":
           description: Bad Request
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Create course
+      summary: StudentLogin
       tags:
-      - courses
+      - student/auth
   /api/student/my_courses:
     get:
       consumes:
       - application/json
-      description: Returns all courses from the database
+      description: Returns all student's courses
       produces:
       - application/json
       responses:
@@ -167,7 +178,37 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get all courses
+      summary: GetMyCourses
       tags:
-      - courses
+      - student/courses
+  /api/student/registration:
+    post:
+      consumes:
+      - application/json
+      description: Registration endpoint for student
+      parameters:
+      - description: Data for registration student
+        in: body
+        name: registrationData
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegistrationDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: registration successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: StudentRegister
+      tags:
+      - student/auth
 swagger: "2.0"

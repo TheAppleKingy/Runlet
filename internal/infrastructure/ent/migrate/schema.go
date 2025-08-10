@@ -26,13 +26,13 @@ var (
 				Symbol:     "attempts_problems_attempts",
 				Columns:    []*schema.Column{AttemptsColumns[3]},
 				RefColumns: []*schema.Column{ProblemsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "attempts_students_attempts",
 				Columns:    []*schema.Column{AttemptsColumns[4]},
 				RefColumns: []*schema.Column{StudentsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -76,7 +76,7 @@ var (
 				Symbol:     "problems_courses_problems",
 				Columns:    []*schema.Column{ProblemsColumns[3]},
 				RefColumns: []*schema.Column{CoursesColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -84,6 +84,8 @@ var (
 	StudentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "email", Type: field.TypeString, Unique: true, Size: 50},
+		{Name: "password", Type: field.TypeString},
 		{Name: "class_id", Type: field.TypeInt},
 	}
 	// StudentsTable holds the schema information for the "students" table.
@@ -94,9 +96,9 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "students_classes_students",
-				Columns:    []*schema.Column{StudentsColumns[2]},
+				Columns:    []*schema.Column{StudentsColumns[4]},
 				RefColumns: []*schema.Column{ClassesColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -104,6 +106,8 @@ var (
 	TeachersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString, Size: 100},
+		{Name: "email", Type: field.TypeString, Unique: true, Size: 50},
+		{Name: "password", Type: field.TypeString},
 	}
 	// TeachersTable holds the schema information for the "teachers" table.
 	TeachersTable = &schema.Table{

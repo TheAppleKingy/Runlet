@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/student/create_course": {
+        "/api/student/login": {
             "post": {
-                "description": "Create course and return it",
+                "description": "Login endpoint for student",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,20 +25,55 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "courses"
+                    "student/auth"
                 ],
-                "summary": "Create course",
+                "summary": "StudentLogin",
                 "parameters": [
                     {
-                        "description": "Course creation data",
-                        "name": "createData",
+                        "description": "Data for login student",
+                        "name": "loginData",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CourseCreateDTO"
+                            "$ref": "#/definitions/dto.LoginDTO"
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "logged in",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/student/my_courses": {
+            "get": {
+                "description": "Returns all student's courses",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "student/courses"
+                ],
+                "summary": "GetMyCourses",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -61,9 +96,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/student/my_courses": {
-            "get": {
-                "description": "Returns all courses from the database",
+        "/api/student/registration": {
+            "post": {
+                "description": "Registration endpoint for student",
                 "consumes": [
                     "application/json"
                 ],
@@ -71,16 +106,27 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "courses"
+                    "student/auth"
                 ],
-                "summary": "Get all courses",
+                "summary": "StudentRegister",
+                "parameters": [
+                    {
+                        "description": "Data for registration student",
+                        "name": "registrationData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegistrationDTO"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "registration successfully",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.CourseViewDTO"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -147,28 +193,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CourseCreateDTO": {
-            "type": "object",
-            "required": [
-                "classes",
-                "description",
-                "title"
-            ],
-            "properties": {
-                "classes": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "description": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.CourseViewDTO": {
             "type": "object",
             "properties": {
@@ -201,6 +225,21 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.LoginDTO": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ProblemViewDTO": {
             "type": "object",
             "properties": {
@@ -226,6 +265,29 @@ const docTemplate = `{
                     }
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RegistrationDTO": {
+            "type": "object",
+            "required": [
+                "class",
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "class": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
                     "type": "string"
                 }
             }

@@ -18,6 +18,10 @@ type Teacher struct {
 	ID int `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Email holds the value of the "email" field.
+	Email string `json:"email,omitempty"`
+	// Password holds the value of the "password" field.
+	Password string `json:"password,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TeacherQuery when eager-loading is set.
 	Edges        TeacherEdges `json:"edges"`
@@ -60,7 +64,7 @@ func (*Teacher) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case teacher.FieldID:
 			values[i] = new(sql.NullInt64)
-		case teacher.FieldName:
+		case teacher.FieldName, teacher.FieldEmail, teacher.FieldPassword:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -88,6 +92,18 @@ func (_m *Teacher) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				_m.Name = value.String
+			}
+		case teacher.FieldEmail:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field email", values[i])
+			} else if value.Valid {
+				_m.Email = value.String
+			}
+		case teacher.FieldPassword:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field password", values[i])
+			} else if value.Valid {
+				_m.Password = value.String
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -137,6 +153,12 @@ func (_m *Teacher) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
+	builder.WriteString(", ")
+	builder.WriteString("email=")
+	builder.WriteString(_m.Email)
+	builder.WriteString(", ")
+	builder.WriteString("password=")
+	builder.WriteString(_m.Password)
 	builder.WriteByte(')')
 	return builder.String()
 }

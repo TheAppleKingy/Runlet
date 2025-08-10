@@ -16,5 +16,5 @@ func (cs *CourseService) GetAllCourses(ctx context.Context) ([]*ent.Course, erro
 }
 
 func (cs *CourseService) CreateCourse(ctx context.Context, data dto.CourseCreateDTO) (*ent.Course, error) {
-	return cs.courseRepo.CreateCourse(ctx, data.Title, data.Description, data.ClassesIds)
+	return cs.courseRepo.CreateCourse(ctx, data.Title, data.Description, data.ClassesIds, data.TeachersIds)
 }

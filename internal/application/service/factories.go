@@ -7,3 +7,16 @@ func NewCourseService(courseRepo repository.CourseRepositoryInterface) *CourseSe
 		courseRepo: courseRepo,
 	}
 }
+
+func NewStudentAuthService(classRepo repository.ClassRepositoryInterface, studentRepo repository.StudentRepositoryInterface) *StudentAuthService {
+	return &StudentAuthService{
+		studentRepository: studentRepo,
+		classRepository:   classRepo,
+	}
+}
+
+func NewStudentCourseService(courseRepo repository.CourseRepositoryInterface) *StudentCourseService {
+	return &StudentCourseService{
+		courseRepository: courseRepo,
+	}
+}

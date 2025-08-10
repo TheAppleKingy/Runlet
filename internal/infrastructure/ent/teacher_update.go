@@ -43,6 +43,34 @@ func (_u *TeacherUpdate) SetNillableName(v *string) *TeacherUpdate {
 	return _u
 }
 
+// SetEmail sets the "email" field.
+func (_u *TeacherUpdate) SetEmail(v string) *TeacherUpdate {
+	_u.mutation.SetEmail(v)
+	return _u
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_u *TeacherUpdate) SetNillableEmail(v *string) *TeacherUpdate {
+	if v != nil {
+		_u.SetEmail(*v)
+	}
+	return _u
+}
+
+// SetPassword sets the "password" field.
+func (_u *TeacherUpdate) SetPassword(v string) *TeacherUpdate {
+	_u.mutation.SetPassword(v)
+	return _u
+}
+
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (_u *TeacherUpdate) SetNillablePassword(v *string) *TeacherUpdate {
+	if v != nil {
+		_u.SetPassword(*v)
+	}
+	return _u
+}
+
 // AddClassIDs adds the "classes" edge to the Class entity by IDs.
 func (_u *TeacherUpdate) AddClassIDs(ids ...int) *TeacherUpdate {
 	_u.mutation.AddClassIDs(ids...)
@@ -154,6 +182,16 @@ func (_u *TeacherUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Teacher.name": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Email(); ok {
+		if err := teacher.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Teacher.email": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Password(); ok {
+		if err := teacher.PasswordValidator(v); err != nil {
+			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "Teacher.password": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -171,6 +209,12 @@ func (_u *TeacherUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(teacher.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Email(); ok {
+		_spec.SetField(teacher.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Password(); ok {
+		_spec.SetField(teacher.FieldPassword, field.TypeString, value)
 	}
 	if _u.mutation.ClassesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -292,6 +336,34 @@ func (_u *TeacherUpdateOne) SetName(v string) *TeacherUpdateOne {
 func (_u *TeacherUpdateOne) SetNillableName(v *string) *TeacherUpdateOne {
 	if v != nil {
 		_u.SetName(*v)
+	}
+	return _u
+}
+
+// SetEmail sets the "email" field.
+func (_u *TeacherUpdateOne) SetEmail(v string) *TeacherUpdateOne {
+	_u.mutation.SetEmail(v)
+	return _u
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_u *TeacherUpdateOne) SetNillableEmail(v *string) *TeacherUpdateOne {
+	if v != nil {
+		_u.SetEmail(*v)
+	}
+	return _u
+}
+
+// SetPassword sets the "password" field.
+func (_u *TeacherUpdateOne) SetPassword(v string) *TeacherUpdateOne {
+	_u.mutation.SetPassword(v)
+	return _u
+}
+
+// SetNillablePassword sets the "password" field if the given value is not nil.
+func (_u *TeacherUpdateOne) SetNillablePassword(v *string) *TeacherUpdateOne {
+	if v != nil {
+		_u.SetPassword(*v)
 	}
 	return _u
 }
@@ -420,6 +492,16 @@ func (_u *TeacherUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Teacher.name": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Email(); ok {
+		if err := teacher.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Teacher.email": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.Password(); ok {
+		if err := teacher.PasswordValidator(v); err != nil {
+			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "Teacher.password": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -454,6 +536,12 @@ func (_u *TeacherUpdateOne) sqlSave(ctx context.Context) (_node *Teacher, err er
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(teacher.FieldName, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Email(); ok {
+		_spec.SetField(teacher.FieldEmail, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Password(); ok {
+		_spec.SetField(teacher.FieldPassword, field.TypeString, value)
 	}
 	if _u.mutation.ClassesCleared() {
 		edge := &sqlgraph.EdgeSpec{

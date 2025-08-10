@@ -40,5 +40,6 @@ func GetCoursesForStudentViewDTO(orms []*ent.Course) []CourseViewDTO {
 type CourseCreateDTO struct {
 	Title       string `json:"title" binding:"required"`
 	Description string `json:"description" binding:"required"`
-	ClassesIds  []int  `json:"classes" binding:"required"`
+	ClassesIds  []int  `json:"classes_ids" binding:"required"`
+	TeachersIds []int  `json:"teachers_ids" binding:"required"`
 }

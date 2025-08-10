@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -21,7 +22,7 @@ func (Problem) Fields() []ent.Field {
 func (Problem) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("course", Course.Type).Ref("problems").Field("course_id").Unique().Required(),
-		edge.To("attempts", Attempt.Type),
+		edge.To("attempts", Attempt.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.From("students", Student.Type).Ref("problems"),
 	}
 }

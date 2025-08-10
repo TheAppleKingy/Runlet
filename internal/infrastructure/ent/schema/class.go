@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -20,7 +21,7 @@ func (Class) Fields() []ent.Field {
 
 func (Class) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("students", Student.Type),
+		edge.To("students", Student.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.From("teachers", Teacher.Type).Ref("classes"),
 		edge.To("courses", Course.Type),
 	}
