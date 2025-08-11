@@ -2,7 +2,7 @@ package api
 
 import (
 	"Runlet/internal/infrastructure/ent"
-	"Runlet/internal/interfaces/api/handlers"
+	"Runlet/internal/interfaces/api/routers"
 
 	_ "Runlet/docs"
 
@@ -19,7 +19,7 @@ import (
 func GetRouter(dbClient *ent.Client) *gin.Engine {
 	router := gin.Default()
 	apiRouter := router.Group("/api")
-	handlers.ConnectStudentRouter(apiRouter, dbClient)
+	routers.ConnectStudentRouter(apiRouter, dbClient)
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
 }

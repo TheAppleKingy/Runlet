@@ -115,6 +115,31 @@ var (
 		Columns:    TeachersColumns,
 		PrimaryKey: []*schema.Column{TeachersColumns[0]},
 	}
+	// ClassTeachersColumns holds the columns for the "class_teachers" table.
+	ClassTeachersColumns = []*schema.Column{
+		{Name: "class_id", Type: field.TypeInt},
+		{Name: "teacher_id", Type: field.TypeInt},
+	}
+	// ClassTeachersTable holds the schema information for the "class_teachers" table.
+	ClassTeachersTable = &schema.Table{
+		Name:       "class_teachers",
+		Columns:    ClassTeachersColumns,
+		PrimaryKey: []*schema.Column{ClassTeachersColumns[0], ClassTeachersColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "class_teachers_class_id",
+				Columns:    []*schema.Column{ClassTeachersColumns[0]},
+				RefColumns: []*schema.Column{ClassesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "class_teachers_teacher_id",
+				Columns:    []*schema.Column{ClassTeachersColumns[1]},
+				RefColumns: []*schema.Column{TeachersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// ClassCoursesColumns holds the columns for the "class_courses" table.
 	ClassCoursesColumns = []*schema.Column{
 		{Name: "class_id", Type: field.TypeInt},
@@ -165,31 +190,6 @@ var (
 			},
 		},
 	}
-	// TeacherClassesColumns holds the columns for the "teacher_classes" table.
-	TeacherClassesColumns = []*schema.Column{
-		{Name: "teacher_id", Type: field.TypeInt},
-		{Name: "class_id", Type: field.TypeInt},
-	}
-	// TeacherClassesTable holds the schema information for the "teacher_classes" table.
-	TeacherClassesTable = &schema.Table{
-		Name:       "teacher_classes",
-		Columns:    TeacherClassesColumns,
-		PrimaryKey: []*schema.Column{TeacherClassesColumns[0], TeacherClassesColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "teacher_classes_teacher_id",
-				Columns:    []*schema.Column{TeacherClassesColumns[0]},
-				RefColumns: []*schema.Column{TeachersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "teacher_classes_class_id",
-				Columns:    []*schema.Column{TeacherClassesColumns[1]},
-				RefColumns: []*schema.Column{ClassesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// TeacherCoursesColumns holds the columns for the "teacher_courses" table.
 	TeacherCoursesColumns = []*schema.Column{
 		{Name: "teacher_id", Type: field.TypeInt},
@@ -223,9 +223,9 @@ var (
 		ProblemsTable,
 		StudentsTable,
 		TeachersTable,
+		ClassTeachersTable,
 		ClassCoursesTable,
 		StudentProblemsTable,
-		TeacherClassesTable,
 		TeacherCoursesTable,
 	}
 )
@@ -235,12 +235,12 @@ func init() {
 	AttemptsTable.ForeignKeys[1].RefTable = StudentsTable
 	ProblemsTable.ForeignKeys[0].RefTable = CoursesTable
 	StudentsTable.ForeignKeys[0].RefTable = ClassesTable
+	ClassTeachersTable.ForeignKeys[0].RefTable = ClassesTable
+	ClassTeachersTable.ForeignKeys[1].RefTable = TeachersTable
 	ClassCoursesTable.ForeignKeys[0].RefTable = ClassesTable
 	ClassCoursesTable.ForeignKeys[1].RefTable = CoursesTable
 	StudentProblemsTable.ForeignKeys[0].RefTable = StudentsTable
 	StudentProblemsTable.ForeignKeys[1].RefTable = ProblemsTable
-	TeacherClassesTable.ForeignKeys[0].RefTable = TeachersTable
-	TeacherClassesTable.ForeignKeys[1].RefTable = ClassesTable
 	TeacherCoursesTable.ForeignKeys[0].RefTable = TeachersTable
 	TeacherCoursesTable.ForeignKeys[1].RefTable = CoursesTable
 }

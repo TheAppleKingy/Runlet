@@ -164,7 +164,7 @@ func (_c *ClassCreate) createSpec() (*Class, *sqlgraph.CreateSpec) {
 	if nodes := _c.mutation.TeachersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Inverse: false,
 			Table:   class.TeachersTable,
 			Columns: class.TeachersPrimaryKey,
 			Bidi:    false,

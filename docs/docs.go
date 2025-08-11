@@ -17,7 +17,53 @@ const docTemplate = `{
     "paths": {
         "/api/student/login": {
             "post": {
-                "description": "Login endpoint for student",
+                "description": "Create course and return it",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "courses"
+                ],
+                "summary": "Create course",
+                "parameters": [
+                    {
+                        "description": "Course creation data",
+                        "name": "createData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CourseCreateDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.CourseViewDTO"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/student/logout": {
+            "post": {
+                "description": "Logout endpoint for student",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,21 +73,10 @@ const docTemplate = `{
                 "tags": [
                     "student/auth"
                 ],
-                "summary": "StudentLogin",
-                "parameters": [
-                    {
-                        "description": "Data for login student",
-                        "name": "loginData",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.LoginDTO"
-                        }
-                    }
-                ],
+                "summary": "Logout",
                 "responses": {
                     "200": {
-                        "description": "logged in",
+                        "description": "logged out",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -49,8 +84,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -193,6 +228,35 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CourseCreateDTO": {
+            "type": "object",
+            "required": [
+                "classes_ids",
+                "description",
+                "teachers_ids",
+                "title"
+            ],
+            "properties": {
+                "classes_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "teachers_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.CourseViewDTO": {
             "type": "object",
             "properties": {
@@ -221,21 +285,6 @@ const docTemplate = `{
                     }
                 },
                 "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.LoginDTO": {
-            "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
                     "type": "string"
                 }
             }

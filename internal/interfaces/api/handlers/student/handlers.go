@@ -8,22 +8,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ConnectStudentCourseHandler(studentRouterGroup *gin.RouterGroup, dbClient *ent.Client) {
+func ConnectStudentCourseHandler(studentCourseRouter *gin.RouterGroup, dbClient *ent.Client) {
 	courseRepo := repositoryimpl.NewCourseRepository(dbClient)
 	studentService := service.NewStudentCourseService(courseRepo)
 	handler := &StudentCourseHandler{
 		studentService: studentService,
 	}
-	studentRouterGroup.GET("/my_courses", handler.GetMyCourses)
+	studentCourseRouter.GET("/my_courses", handler.GetMyCourses)
 }
 
-func ConnectStudentAuthHandler(studentRouterGroup *gin.RouterGroup, dbClient *ent.Client) {
+func ConnectStudentAuthHandler(studentAuthRouter *gin.RouterGroup, dbClient *ent.Client) {
 	studentRepo := repositoryimpl.NewStudentRepository(dbClient)
 	classRepository := repositoryimpl.NewClassRepository(dbClient)
 	studentAuthService := service.NewStudentAuthService(classRepository, studentRepo)
 	handler := StudentAuthHandler{
 		studentAuthService: *studentAuthService,
 	}
-	studentRouterGroup.POST("/login", handler.Login)
-	studentRouterGroup.POST("/registration", handler.Register)
+	studentAuthRouter.POST("/login", handler.Login)
+	studentAuthRouter.POST("/registration", handler.Register)
+	studentAuthRouter.POST("/logout", handler.Logout)
 }

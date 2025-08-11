@@ -219,7 +219,7 @@ func (_u *TeacherUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if _u.mutation.ClassesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   teacher.ClassesTable,
 			Columns: teacher.ClassesPrimaryKey,
 			Bidi:    false,
@@ -232,7 +232,7 @@ func (_u *TeacherUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if nodes := _u.mutation.RemovedClassesIDs(); len(nodes) > 0 && !_u.mutation.ClassesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   teacher.ClassesTable,
 			Columns: teacher.ClassesPrimaryKey,
 			Bidi:    false,
@@ -248,7 +248,7 @@ func (_u *TeacherUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if nodes := _u.mutation.ClassesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   teacher.ClassesTable,
 			Columns: teacher.ClassesPrimaryKey,
 			Bidi:    false,
@@ -546,7 +546,7 @@ func (_u *TeacherUpdateOne) sqlSave(ctx context.Context) (_node *Teacher, err er
 	if _u.mutation.ClassesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   teacher.ClassesTable,
 			Columns: teacher.ClassesPrimaryKey,
 			Bidi:    false,
@@ -559,7 +559,7 @@ func (_u *TeacherUpdateOne) sqlSave(ctx context.Context) (_node *Teacher, err er
 	if nodes := _u.mutation.RemovedClassesIDs(); len(nodes) > 0 && !_u.mutation.ClassesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   teacher.ClassesTable,
 			Columns: teacher.ClassesPrimaryKey,
 			Bidi:    false,
@@ -575,7 +575,7 @@ func (_u *TeacherUpdateOne) sqlSave(ctx context.Context) (_node *Teacher, err er
 	if nodes := _u.mutation.ClassesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   teacher.ClassesTable,
 			Columns: teacher.ClassesPrimaryKey,
 			Bidi:    false,

@@ -543,7 +543,7 @@ func (c *ClassClient) QueryTeachers(_m *Class) *TeacherQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(class.Table, class.FieldID, id),
 			sqlgraph.To(teacher.Table, teacher.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, class.TeachersTable, class.TeachersPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, class.TeachersTable, class.TeachersPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -1251,7 +1251,7 @@ func (c *TeacherClient) QueryClasses(_m *Teacher) *ClassQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(teacher.Table, teacher.FieldID, id),
 			sqlgraph.To(class.Table, class.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, teacher.ClassesTable, teacher.ClassesPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, teacher.ClassesTable, teacher.ClassesPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil

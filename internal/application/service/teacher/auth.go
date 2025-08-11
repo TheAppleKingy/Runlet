@@ -1,4 +1,4 @@
-package service
+package teacher
 
 import (
 	"Runlet/internal/application/dto"

@@ -4,6 +4,7 @@ import (
 	"Runlet/internal/domain/repository"
 	"Runlet/internal/infrastructure/ent"
 	"Runlet/internal/infrastructure/ent/class"
+	"Runlet/internal/infrastructure/ent/course"
 	"context"
 )
 
@@ -18,6 +19,11 @@ func (r *CourseRepository) GetCourseById(ctx context.Context, id int) (*ent.Cour
 
 func (r *CourseRepository) GetAllCourses(ctx context.Context) ([]*ent.Course, error) {
 	return r.client.Course.Query().WithProblems().All(ctx)
+}
+
+func (r *CourseRepository) GetAllStudentCourses(ctx context.Context, studentId int) ([]*ent.Course, error) {
+	st := r.client.Student.GetX(ctx, studentId)
+	return r.client.Course.Query().WithProblems().Where(course.HasClassesWith(class.IDEQ(st.ClassID))).All(ctx)
 }
 
 func (r *CourseRepository) CreateCourse(ctx context.Context, title string, description string, classesIds []int, teachersIds []int) (*ent.Course, error) {

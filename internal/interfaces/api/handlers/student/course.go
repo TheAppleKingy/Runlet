@@ -2,15 +2,14 @@ package student
 
 import (
 	"Runlet/internal/application/dto"
-	"Runlet/internal/application/service"
+	"Runlet/internal/application/service/student"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 type StudentCourseHandler struct {
-	studentService *service.StudentCourseService
+	studentService *student.StudentCourseService
 }
 
 // GetCourses godoc
@@ -21,18 +20,15 @@ type StudentCourseHandler struct {
 // @Produce  json
 // @Success 200 {array} dto.CourseViewDTO
 // @Failure 400 {object} map[string]string
-// @Router /api/student/my_courses [get]
+// @Router /api/student/course/my_courses [get]
 func (h StudentCourseHandler) GetMyCourses(ctx *gin.Context) {
 	studentId := ctx.GetInt("student_id")
 	courses, err := h.studentService.GetStudentCourses(ctx.Request.Context(), studentId)
 	if err != nil {
-		status := http.StatusInternalServerError
-		if strings.Contains(err.Error(), "no courses found") {
-			status = http.StatusOK
-		}
-		ctx.AbortWithStatusJSON(status, gin.H{
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	ctx.JSON(http.StatusOK, dto.GetCoursesForStudentViewDTO(courses))
 }

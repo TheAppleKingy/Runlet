@@ -30,7 +30,7 @@ const (
 	// StudentsColumn is the table column denoting the students relation/edge.
 	StudentsColumn = "class_id"
 	// TeachersTable is the table that holds the teachers relation/edge. The primary key declared below.
-	TeachersTable = "teacher_classes"
+	TeachersTable = "class_teachers"
 	// TeachersInverseTable is the table name for the Teacher entity.
 	// It exists in this package in order to avoid circular dependency with the "teacher" package.
 	TeachersInverseTable = "teachers"
@@ -50,7 +50,7 @@ var Columns = []string{
 var (
 	// TeachersPrimaryKey and TeachersColumn2 are the table columns denoting the
 	// primary key for the teachers relation (M2M).
-	TeachersPrimaryKey = []string{"teacher_id", "class_id"}
+	TeachersPrimaryKey = []string{"class_id", "teacher_id"}
 	// CoursesPrimaryKey and CoursesColumn2 are the table columns denoting the
 	// primary key for the courses relation (M2M).
 	CoursesPrimaryKey = []string{"class_id", "course_id"}
@@ -136,7 +136,7 @@ func newTeachersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TeachersInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, TeachersTable, TeachersPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2M, false, TeachersTable, TeachersPrimaryKey...),
 	)
 }
 func newCoursesStep() *sqlgraph.Step {

@@ -14,6 +14,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "token was not provide",
 			})
+			return
 		}
 		teacherId, err := token.GetTeacherFromToken(tokenString)
 		if err != nil {
@@ -22,6 +23,7 @@ func AuthMiddleware() gin.HandlerFunc {
 				ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 					"error": err.Error(),
 				})
+				return
 			}
 			ctx.Set("student_id", studentId)
 			ctx.Next()

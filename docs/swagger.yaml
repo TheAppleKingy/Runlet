@@ -31,6 +31,26 @@ definitions:
           $ref: '#/definitions/dto.TeacherViewDTO'
         type: array
     type: object
+  dto.CourseCreateDTO:
+    properties:
+      classes_ids:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      teachers_ids:
+        items:
+          type: integer
+        type: array
+      title:
+        type: string
+    required:
+    - classes_ids
+    - description
+    - teachers_ids
+    - title
+    type: object
   dto.CourseViewDTO:
     properties:
       classes:
@@ -51,16 +71,6 @@ definitions:
         type: array
       title:
         type: string
-    type: object
-  dto.LoginDTO:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
     type: object
   dto.ProblemViewDTO:
     properties:
@@ -132,30 +142,53 @@ paths:
     post:
       consumes:
       - application/json
-      description: Login endpoint for student
+      description: Create course and return it
       parameters:
-      - description: Data for login student
+      - description: Course creation data
         in: body
-        name: loginData
+        name: createData
         required: true
         schema:
-          $ref: '#/definitions/dto.LoginDTO'
+          $ref: '#/definitions/dto.CourseCreateDTO'
       produces:
       - application/json
       responses:
         "200":
-          description: logged in
+          description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            items:
+              $ref: '#/definitions/dto.CourseViewDTO'
+            type: array
         "400":
           description: Bad Request
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: StudentLogin
+      summary: Create course
+      tags:
+      - courses
+  /api/student/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout endpoint for student
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: logged out
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout
       tags:
       - student/auth
   /api/student/my_courses:

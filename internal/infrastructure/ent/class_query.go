@@ -101,7 +101,7 @@ func (_q *ClassQuery) QueryTeachers() *TeacherQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(class.Table, class.FieldID, selector),
 			sqlgraph.To(teacher.Table, teacher.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, class.TeachersTable, class.TeachersPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, class.TeachersTable, class.TeachersPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -534,10 +534,10 @@ func (_q *ClassQuery) loadTeachers(ctx context.Context, query *TeacherQuery, nod
 	}
 	query.Where(func(s *sql.Selector) {
 		joinT := sql.Table(class.TeachersTable)
-		s.Join(joinT).On(s.C(teacher.FieldID), joinT.C(class.TeachersPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(class.TeachersPrimaryKey[1]), edgeIDs...))
+		s.Join(joinT).On(s.C(teacher.FieldID), joinT.C(class.TeachersPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(class.TeachersPrimaryKey[0]), edgeIDs...))
 		columns := s.SelectedColumns()
-		s.Select(joinT.C(class.TeachersPrimaryKey[1]))
+		s.Select(joinT.C(class.TeachersPrimaryKey[0]))
 		s.AppendSelect(columns...)
 		s.SetDistinct(false)
 	})
