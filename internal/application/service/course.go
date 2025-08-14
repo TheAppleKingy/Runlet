@@ -2,19 +2,25 @@ package service
 
 import (
 	"Runlet/internal/application/dto"
+	"Runlet/internal/domain/entities"
 	"Runlet/internal/domain/repository"
-	"Runlet/internal/infrastructure/ent"
 	"context"
+	"fmt"
 )
 
 type CourseService struct {
-	courseRepo repository.CourseRepositoryInterface
+	CourseRepo repository.CourseRepositoryInterface
 }
 
-func (cs *CourseService) GetAllCourses(ctx context.Context) ([]*ent.Course, error) {
-	return cs.courseRepo.GetAllCourses(ctx)
+func (cs *CourseService) GetAllCourses(ctx context.Context) ([]entities.Course, error) {
+	return cs.CourseRepo.GetAllCourses(ctx)
+
 }
 
-func (cs *CourseService) CreateCourse(ctx context.Context, data dto.CourseCreateDTO) (*ent.Course, error) {
-	return cs.courseRepo.CreateCourse(ctx, data.Title, data.Description, data.ClassesIds)
+func (cs *CourseService) CreateCourse(ctx context.Context, data dto.CourseCreateDTO) (entities.Course, error) {
+	created, err := cs.CourseRepo.CreateCourse(ctx, data.Title, data.Description, data.ClassesIds, data.TeachersIds)
+	if err != nil {
+		return entities.Course{}, fmt.Errorf("unable to create course: %v", err)
+	}
+	return created, nil
 }

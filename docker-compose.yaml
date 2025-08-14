@@ -20,5 +20,23 @@ services:
     ports:
       - "5432:5432"
 
+  test_database:
+    image: postgres:17.5-alpine
+    environment:
+      - POSTGRES_DB=test_database
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_password
+
+
+  migrations:
+    build: migrations
+    env_file:
+      - .env
+    volumes:
+      - ./migrations/queries:/migrations
+    depends_on:
+      - database
+
+
 volumes:
   runlet_db_data:
