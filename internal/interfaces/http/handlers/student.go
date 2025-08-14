@@ -1,8 +1,8 @@
-package student
+package handlers
 
 import (
 	"Runlet/internal/application/dto"
-	"Runlet/internal/application/service/student"
+	"Runlet/internal/application/service"
 	"errors"
 	"net/http"
 	"os"
@@ -12,8 +12,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type StudentAuthHandler struct {
-	studentAuthService student.StudentAuthService
+type StudentHandler struct {
+	StudentService     *service.StudentService
+	StudentAuthService *service.StudentAuthService
+}
+
+func NewStudentHandler(studentService *service.StudentService, studentAuthService *service.StudentAuthService) *StudentHandler {
+	return &StudentHandler{
+		StudentService:     studentService,
+		StudentAuthService: studentAuthService,
+	}
 }
 
 // StudentLogin godoc
@@ -25,8 +33,8 @@ type StudentAuthHandler struct {
 // @Param loginData body dto.LoginDTO true "Data for login student"
 // @Success 200 {object} map[string]string "logged in"
 // @Failure 400 {object} map[string]string "logget out"
-// @Router /api/student/auth/login [post]
-func (h StudentAuthHandler) Login(ctx *gin.Context) {
+// @Router /api/student/login [post]
+func (h StudentHandler) Login(ctx *gin.Context) {
 	var data dto.LoginDTO
 	if err := ctx.ShouldBindJSON(&data); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{
@@ -40,7 +48,7 @@ func (h StudentAuthHandler) Login(ctx *gin.Context) {
 		})
 		return
 	}
-	tokenString, err := h.studentAuthService.Login(ctx.Request.Context(), data)
+	tokenString, err := h.StudentAuthService.Login(ctx.Request.Context(), data)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -76,8 +84,8 @@ func (h StudentAuthHandler) Login(ctx *gin.Context) {
 // @Produce  json
 // @Success 200 {object} map[string]string "logged out"
 // @Failure 401 {object} map[string]string
-// @Router /api/student/auth/logout [post]
-func (h StudentAuthHandler) Logout(ctx *gin.Context) {
+// @Router /api/student/logout [post]
+func (h StudentHandler) Logout(ctx *gin.Context) {
 	ctx.SetCookie(
 		"token",
 		"",
@@ -99,10 +107,10 @@ func (h StudentAuthHandler) Logout(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param registrationData body dto.RegistrationDTO true "Data for registration student"
-// @Success 200 {object} map[string]string "registration successfully"
+// @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
-// @Router /api/student/auth/registration [post]
-func (h StudentAuthHandler) Register(ctx *gin.Context) {
+// @Router /api/student/registration [post]
+func (h StudentHandler) Register(ctx *gin.Context) {
 	var data dto.RegistrationDTO
 	if err := ctx.ShouldBindJSON(&data); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusUnprocessableEntity, gin.H{
@@ -110,15 +118,54 @@ func (h StudentAuthHandler) Register(ctx *gin.Context) {
 		})
 	}
 	status := http.StatusBadRequest
-	if err := h.studentAuthService.Register(ctx.Request.Context(), data); err != nil {
+	if err := h.StudentAuthService.Register(ctx.Request.Context(), data); err != nil {
 		if strings.Contains(err.Error(), "registration failed") {
 			status = http.StatusInternalServerError
 		}
 		ctx.AbortWithStatusJSON(status, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"detail": "registration successfully",
 	})
 }
+
+// GetCourses godoc
+// @Summary GetMyCourses
+// @Description Returns all student's courses
+// @Tags student/courses
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} dto.CourseViewDTO
+// @Failure 400 {object} map[string]string
+// @Router /api/student/course/my_courses [get]
+// func (h StudentHandler) GetMyCourses(ctx *gin.Context) {
+// 	studentId := ctx.GetInt("student_id")
+// 	courses, err := h.StudentService.GetStudentCourses(ctx.Request.Context(), studentId)
+// 	if err != nil {
+// 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+// 			"error": err.Error(),
+// 		})
+// 		return
+// 	}
+// 	ctx.JSON(http.StatusOK, dto.GetCoursesForStudentViewDTO(courses))
+// }
+
+// GetCourses godoc
+// @Summary Create course
+// @Description Create course and return it
+// @Tags courses
+// @Accept  json
+// @Produce  json
+//
+//	@Param   createData  body  dto.CourseCreateDTO  true  "Course creation data"  example(`{
+//	  "title": "Introduction to Go",
+//	  "description": "A beginner-friendly Go course",
+//	  "classesIds": [1, 2, 3]
+//	}`)
+//
+// @Success 200 {array} dto.CourseViewDTO
+// @Failure 400 {object} map[string]string
+// @Router /api/student/create_course [post]

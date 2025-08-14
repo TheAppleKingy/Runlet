@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/api/student/login": {
             "post": {
-                "description": "Create course and return it",
+                "description": "Login endpoint for student",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,32 +25,32 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "courses"
+                    "student/auth"
                 ],
-                "summary": "Create course",
+                "summary": "StudentLogin",
                 "parameters": [
                     {
-                        "description": "Course creation data",
-                        "name": "createData",
+                        "description": "Data for login student",
+                        "name": "loginData",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CourseCreateDTO"
+                            "$ref": "#/definitions/dto.LoginDTO"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "logged in",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.CourseViewDTO"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "logget out",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -96,41 +96,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/student/my_courses": {
-            "get": {
-                "description": "Returns all student's courses",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "student/courses"
-                ],
-                "summary": "GetMyCourses",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.CourseViewDTO"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/student/registration": {
             "post": {
                 "description": "Registration endpoint for student",
@@ -157,7 +122,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "registration successfully",
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -179,141 +144,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.AttemptViewDTO": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "integer"
-                },
-                "done": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "problem_id": {
-                    "type": "integer"
-                },
-                "student_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.ClassViewDTO": {
-            "type": "object",
-            "properties": {
-                "courses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.CourseViewDTO"
-                    }
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "number": {
-                    "type": "string"
-                },
-                "students": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.StudentViewDTO"
-                    }
-                },
-                "teachers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.TeacherViewDTO"
-                    }
-                }
-            }
-        },
-        "dto.CourseCreateDTO": {
+        "dto.LoginDTO": {
             "type": "object",
             "required": [
-                "classes_ids",
-                "description",
-                "teachers_ids",
-                "title"
+                "email",
+                "password"
             ],
             "properties": {
-                "classes_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "description": {
+                "email": {
                     "type": "string"
                 },
-                "teachers_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CourseViewDTO": {
-            "type": "object",
-            "properties": {
-                "classes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.ClassViewDTO"
-                    }
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "problems": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.ProblemViewDTO"
-                    }
-                },
-                "teachers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.TeacherViewDTO"
-                    }
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.ProblemViewDTO": {
-            "type": "object",
-            "properties": {
-                "attempts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.AttemptViewDTO"
-                    }
-                },
-                "course_id": {
-                    "type": "integer"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "students": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.StudentViewDTO"
-                    }
-                },
-                "title": {
+                "password": {
                     "type": "string"
                 }
             }
@@ -340,61 +181,18 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "dto.StudentViewDTO": {
-            "type": "object",
-            "properties": {
-                "class_id": {
-                    "type": "integer"
-                },
-                "courses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.CourseViewDTO"
-                    }
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.TeacherViewDTO": {
-            "type": "object",
-            "properties": {
-                "classes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.ClassViewDTO"
-                    }
-                },
-                "courses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.CourseViewDTO"
-                    }
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Runlet API",
+	Description:      "API documentation for Runlet",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

@@ -1,40 +1,40 @@
 package repositoryimpl
 
 import (
+	"Runlet/internal/domain/entities"
 	"Runlet/internal/domain/repository"
-	"Runlet/internal/infrastructure/ent"
-	"Runlet/internal/infrastructure/ent/problem"
 	"context"
+
+	"github.com/doug-martin/goqu/v9"
 )
 
 type ProblemRepository struct {
 	repository.ProblemRepositoryInterface
-	client *ent.Client
+	db *goqu.Database
 }
 
-func (r ProblemRepository) GetProblem(ctx context.Context, id int) (*ent.Problem, error) {
-	return r.client.Problem.Get(ctx, id)
+func NewProblemRepository(db *goqu.Database) *ProblemRepository {
+	return &ProblemRepository{
+		db: db,
+	}
 }
 
-func (r ProblemRepository) GetCourseProblems(ctx context.Context, courseId int) ([]*ent.Problem, error) {
-	return r.client.Problem.Query().Where(problem.CourseIDEQ(courseId)).All(ctx)
+func (r ProblemRepository) GetProblem(ctx context.Context, id int) (entities.Problem, error) {
+	return entities.Problem{}, nil
 }
 
-func (r ProblemRepository) CreateProblem(ctx context.Context, title string, description string, courseId int) (*ent.Problem, error) {
-	return r.client.Problem.Create().SetTitle(title).SetDescription(description).SetCourseID(courseId).Save(ctx)
+func (r ProblemRepository) GetCourseProblems(ctx context.Context, courseId int) ([]entities.Problem, error) {
+	return make([]entities.Problem, 0), nil
+}
+
+func (r ProblemRepository) CreateProblem(ctx context.Context, title string, description string, courseId int) (entities.Problem, error) {
+	return entities.Problem{}, nil
 }
 
 func (r ProblemRepository) UpdateCourseProblem(ctx context.Context, problemId int, title string, description string) error {
-	query := r.client.Problem.Update().Where(problem.IDEQ(problemId))
-	if title != "" {
-		query = query.SetTitle(title)
-	}
-	if description != "" {
-		query = query.SetDescription(description)
-	}
-	return query.Exec(ctx)
+	return nil
 }
 
 func (r ProblemRepository) DeleteCourseProblem(ctx context.Context, problemId int) error {
-	return r.client.Problem.DeleteOneID(problemId).Exec(ctx)
+	return nil
 }

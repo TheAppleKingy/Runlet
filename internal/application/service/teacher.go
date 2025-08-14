@@ -1,43 +1,42 @@
-package teacher
+package service
 
 import (
 	"Runlet/internal/application/dto"
 	"Runlet/internal/domain/repository"
-	"Runlet/internal/infrastructure/ent"
 	"Runlet/internal/infrastructure/security"
+	"Runlet/internal/infrastructure/security/token"
 	"context"
-	"errors"
+	"fmt"
 )
 
 type TeacherAuthService struct {
 	TeacherRepository repository.TeacherRepositoryInterface
 }
 
-func (ts TeacherAuthService) Login(ctx context.Context, loginDTO dto.LoginDTO) error {
+func (ts TeacherAuthService) Login(ctx context.Context, loginDTO dto.LoginDTO) (string, error) {
 	teacher, err := ts.TeacherRepository.GetTeacherByEmail(ctx, loginDTO.Email)
 	if err != nil {
-		if ent.IsNotFound(err) {
-			return errors.New("no teacher with provided email")
-		}
-		return errors.New("Login failed")
+		return "", fmt.Errorf("unable to found teacher: %v", err)
+
 	}
 	if !security.CheckPassword(loginDTO.Password, teacher.Password) {
-		return errors.New("wrong password")
+		return "", fmt.Errorf("error password validating: %v", err)
 	}
-	return nil
+	tokenString, err := token.GetTokenForTeacher(teacher.ID)
+	if err != nil {
+		return "", fmt.Errorf("login failed: %v", err)
+	}
+	return tokenString, nil
 }
 
 func (ts TeacherAuthService) Register(ctx context.Context, registerDTO dto.RegistrationDTO) error {
 	hashedPas, err := security.HashPassword(registerDTO.Password)
 	if err != nil {
-		return errors.New("fail password proccessing")
+		return fmt.Errorf("error processing password: %v", err)
 	}
 	_, err = ts.TeacherRepository.CreateTeacher(ctx, registerDTO.Name, registerDTO.Email, hashedPas)
 	if err != nil {
-		if ent.IsConstraintError(err) {
-			return errors.New("teacher with this email already exists")
-		}
-		return errors.New("registration failed")
+		return fmt.Errorf("unable to create teacher: %v", err)
 	}
 	return nil
 }

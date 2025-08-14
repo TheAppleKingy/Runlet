@@ -1,51 +1,48 @@
 package repositoryimpl
 
 import (
+	"Runlet/internal/domain/entities"
 	"Runlet/internal/domain/repository"
-	"Runlet/internal/infrastructure/ent"
-	"Runlet/internal/infrastructure/ent/class"
-	"Runlet/internal/infrastructure/ent/course"
 	"context"
+
+	"github.com/doug-martin/goqu/v9"
 )
 
 type CourseRepository struct {
 	repository.CourseRepositoryInterface
-	client *ent.Client
+	db *goqu.Database
 }
 
-func (r *CourseRepository) GetCourseById(ctx context.Context, id int) (*ent.Course, error) {
-	return r.client.Course.Get(ctx, id)
+func NewCourseRepository(db *goqu.Database) *CourseRepository {
+	return &CourseRepository{
+		db: db,
+	}
 }
 
-func (r *CourseRepository) GetAllCourses(ctx context.Context) ([]*ent.Course, error) {
-	return r.client.Course.Query().WithProblems().All(ctx)
+func (r *CourseRepository) GetCourseById(ctx context.Context, id int) (entities.Course, error) {
+	return entities.Course{}, nil
 }
 
-func (r *CourseRepository) GetAllStudentCourses(ctx context.Context, studentId int) ([]*ent.Course, error) {
-	st := r.client.Student.GetX(ctx, studentId)
-	return r.client.Course.Query().WithProblems().Where(course.HasClassesWith(class.IDEQ(st.ClassID))).All(ctx)
+func (r *CourseRepository) GetAllCourses(ctx context.Context) ([]entities.Course, error) {
+	return make([]entities.Course, 0), nil
 }
 
-func (r *CourseRepository) CreateCourse(ctx context.Context, title string, description string, classesIds []int, teachersIds []int) (*ent.Course, error) {
-	return r.client.Course.Create().SetTitle(title).SetDescription(description).AddClassIDs(classesIds...).AddTeacherIDs(teachersIds...).Save(ctx)
+func (r *CourseRepository) GetAllStudentCourses(ctx context.Context, studentId int) ([]entities.Course, error) {
+	return make([]entities.Course, 0), nil
+}
+
+func (r *CourseRepository) CreateCourse(ctx context.Context, title string, description string, classesIds []int, teachersIds []int) (entities.Course, error) {
+	return entities.Course{}, nil
 }
 
 func (r *CourseRepository) DeleteCourse(ctx context.Context, id int) error {
-	return r.client.Course.DeleteOneID(id).Exec(ctx)
+	return nil
 }
 
-func (r *CourseRepository) AddClasses(ctx context.Context, courseId int, classesIds []int) ([]*ent.Class, error) {
-	updatedCourse, err := r.client.Course.UpdateOneID(courseId).AddClassIDs(classesIds...).Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return updatedCourse.QueryClasses().Where(class.IDIn(classesIds...)).All(ctx)
+func (r *CourseRepository) AddClasses(ctx context.Context, courseId int, classesIds []int) ([]entities.Class, error) {
+	return make([]entities.Class, 0), nil
 }
 
-func (r *CourseRepository) ExcludeStudents(ctx context.Context, courseId int, classesIds []int) ([]*ent.Class, error) {
-	updatedCourse, err := r.client.Course.UpdateOneID(courseId).RemoveClassIDs(classesIds...).Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return updatedCourse.QueryClasses().Where(class.IDIn(classesIds...)).All(ctx)
+func (r *CourseRepository) ExcludeStudents(ctx context.Context, courseId int, classesIds []int) ([]entities.Class, error) {
+	return make([]entities.Class, 0), nil
 }
