@@ -1,25 +1,48 @@
 package repositoryimpl
 
 import (
+	"Runlet/internal/domain/entities"
 	"Runlet/internal/domain/repository"
-	"Runlet/internal/infrastructure/ent"
-	"Runlet/internal/infrastructure/ent/class"
+	"Runlet/internal/infrastructure/tables"
 	"context"
+	"fmt"
+
+	"github.com/doug-martin/goqu/v9"
 )
 
 type ClassRepository struct {
 	repository.ClassRepositoryInterface
-	client *ent.Client
+	db *goqu.Database
 }
 
-func (r ClassRepository) GetClass(ctx context.Context, num string) (*ent.Class, error) {
-	return r.client.Class.Query().Where(class.NumberEQ(num)).Only(ctx)
+func NewClassRepository(db *goqu.Database) *ClassRepository {
+	return &ClassRepository{
+		db: db,
+	}
 }
 
-func (r ClassRepository) CreateClass(ctx context.Context, num string) (*ent.Class, error) {
-	return r.client.Class.Create().SetNumber(num).Save(ctx)
+func (r ClassRepository) GetClass(ctx context.Context, num string) (entities.Class, error) {
+	var class entities.Class
+	found, err := r.db.From(tables.ClassTable).Select().Where(goqu.Ex{"number": num}).ScanStruct(&class)
+	if err != nil || !found {
+		fmt.Println(err, "err here")
+		return entities.Class{}, err
+	}
+	return class, nil
+}
+
+func (r ClassRepository) CreateClass(ctx context.Context, num string) (entities.Class, error) {
+	var class entities.Class
+	created, err := r.db.Insert(tables.ClassTable).Rows(goqu.Record{
+		"number": num,
+	}).Returning().Executor().ScanStruct(&class)
+	if err != nil || !created {
+		return entities.Class{}, err
+	}
+	return class, nil
 }
 
 func (r ClassRepository) DeleteClass(ctx context.Context, id int) error {
-	return r.client.Class.DeleteOneID(id).Exec(ctx)
+	_, err := r.db.Delete(tables.ClassTable).Where(goqu.Ex{"id": id}).Executor().Exec()
+	return err
 }
