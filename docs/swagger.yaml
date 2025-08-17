@@ -1,173 +1,119 @@
+basePath: /
 definitions:
-  dto.AttemptViewDTO:
+  dto.LoginDTO:
     properties:
-      amount:
-        type: integer
-      done:
-        type: boolean
-      id:
-        type: integer
-      problem_id:
-        type: integer
-      student_id:
-        type: integer
-    type: object
-  dto.ClassViewDTO:
-    properties:
-      courses:
-        items:
-          $ref: '#/definitions/dto.CourseViewDTO'
-        type: array
-      id:
-        type: integer
-      number:
+      email:
         type: string
-      students:
-        items:
-          $ref: '#/definitions/dto.StudentViewDTO'
-        type: array
-      teachers:
-        items:
-          $ref: '#/definitions/dto.TeacherViewDTO'
-        type: array
-    type: object
-  dto.CourseCreateDTO:
-    properties:
-      classes:
-        items:
-          type: integer
-        type: array
-      description:
-        type: string
-      title:
+      password:
         type: string
     required:
-    - classes
-    - description
-    - title
+    - email
+    - password
     type: object
-  dto.CourseViewDTO:
+  dto.RegistrationDTO:
     properties:
-      classes:
-        items:
-          $ref: '#/definitions/dto.ClassViewDTO'
-        type: array
-      description:
+      class:
         type: string
-      id:
-        type: integer
-      problems:
-        items:
-          $ref: '#/definitions/dto.ProblemViewDTO'
-        type: array
-      teachers:
-        items:
-          $ref: '#/definitions/dto.TeacherViewDTO'
-        type: array
-      title:
+      email:
         type: string
-    type: object
-  dto.ProblemViewDTO:
-    properties:
-      attempts:
-        items:
-          $ref: '#/definitions/dto.AttemptViewDTO'
-        type: array
-      course_id:
-        type: integer
-      description:
-        type: string
-      id:
-        type: integer
-      students:
-        items:
-          $ref: '#/definitions/dto.StudentViewDTO'
-        type: array
-      title:
-        type: string
-    type: object
-  dto.StudentViewDTO:
-    properties:
-      class_id:
-        type: integer
-      courses:
-        items:
-          $ref: '#/definitions/dto.CourseViewDTO'
-        type: array
-      id:
-        type: integer
       name:
         type: string
-    type: object
-  dto.TeacherViewDTO:
-    properties:
-      classes:
-        items:
-          $ref: '#/definitions/dto.ClassViewDTO'
-        type: array
-      courses:
-        items:
-          $ref: '#/definitions/dto.CourseViewDTO'
-        type: array
-      id:
-        type: integer
-      name:
+      password:
         type: string
+    required:
+    - class
+    - email
+    - name
+    - password
     type: object
+host: localhost:8081
 info:
   contact: {}
+  description: API documentation for Runlet
+  title: Runlet API
+  version: "1.0"
 paths:
-  /api/student/create_course:
+  /api/student/login:
     post:
       consumes:
       - application/json
-      description: Create course and return it
+      description: Login endpoint for student
       parameters:
-      - description: Course creation data
+      - description: Data for login student
         in: body
-        name: createData
+        name: loginData
         required: true
         schema:
-          $ref: '#/definitions/dto.CourseCreateDTO'
+          $ref: '#/definitions/dto.LoginDTO'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/dto.CourseViewDTO'
-            type: array
-        "400":
-          description: Bad Request
+          description: logged in
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Create course
+        "400":
+          description: logget out
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: StudentLogin
       tags:
-      - courses
-  /api/student/my_courses:
-    get:
+      - student/auth
+  /api/student/logout:
+    post:
       consumes:
       - application/json
-      description: Returns all courses from the database
+      description: Logout endpoint for student
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: logged out
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout
+      tags:
+      - student/auth
+  /api/student/registration:
+    post:
+      consumes:
+      - application/json
+      description: Registration endpoint for student
+      parameters:
+      - description: Data for registration student
+        in: body
+        name: registrationData
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegistrationDTO'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.CourseViewDTO'
-            type: array
+            additionalProperties:
+              type: string
+            type: object
         "400":
           description: Bad Request
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Get all courses
+      summary: StudentRegister
       tags:
-      - courses
+      - student/auth
 swagger: "2.0"
