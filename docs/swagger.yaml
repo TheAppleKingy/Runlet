@@ -1,0 +1,119 @@
+basePath: /
+definitions:
+  dto.LoginDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.RegistrationDTO:
+    properties:
+      class:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - class
+    - email
+    - name
+    - password
+    type: object
+host: localhost:8081
+info:
+  contact: {}
+  description: API documentation for Runlet
+  title: Runlet API
+  version: "1.0"
+paths:
+  /api/student/login:
+    post:
+      consumes:
+      - application/json
+      description: Login endpoint for student
+      parameters:
+      - description: Data for login student
+        in: body
+        name: loginData
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: logged in
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: logget out
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: StudentLogin
+      tags:
+      - student/auth
+  /api/student/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout endpoint for student
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: logged out
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout
+      tags:
+      - student/auth
+  /api/student/registration:
+    post:
+      consumes:
+      - application/json
+      description: Registration endpoint for student
+      parameters:
+      - description: Data for registration student
+        in: body
+        name: registrationData
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegistrationDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: StudentRegister
+      tags:
+      - student/auth
+swagger: "2.0"

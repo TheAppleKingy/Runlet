@@ -4,19 +4,18 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-RUN go install entgo.io/ent/cmd/ent@latest
+RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 COPY . .
 
+RUN swag init -g ./cmd/server/main.go    
 RUN CGO_ENABLED=0 GOOS=linux go build -o app ./cmd/server
-RUN CGO_ENABLED=0 GOOS=linux go build -o migrate ./cmd/migrate
 
 FROM alpine:latest
 
 WORKDIR /app
 
 COPY --from=builder /app/app .
-COPY --from=builder /app/migrate .
 
 
-EXPOSE 8080
+EXPOSE 8081
