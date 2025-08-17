@@ -23,7 +23,7 @@ func NewStudentAuthService(studentRepo repository.StudentRepositoryInterface, cl
 
 func (s StudentAuthService) Login(ctx context.Context, loginDTO dto.LoginDTO) (string, error) {
 	student, err := s.StudentRepository.GetStudentByEmail(ctx, loginDTO.Email)
-	if err != nil {
+	if err != nil || student.ID == 0 {
 		return "", fmt.Errorf("unable to found student: %v", err)
 	}
 	if !security.CheckPassword(loginDTO.Password, student.Password) {
@@ -42,7 +42,7 @@ func (s StudentAuthService) Register(ctx context.Context, registerDTO dto.Regist
 		return fmt.Errorf("error processing password: %v", err)
 	}
 	class, err := s.ClassRepository.GetClass(ctx, registerDTO.ClassNum)
-	if err != nil {
+	if err != nil || class.ID == 0 {
 		return fmt.Errorf("unable to found student class: %v", err)
 	}
 	_, err = s.StudentRepository.CreateStudent(ctx, registerDTO.Name, registerDTO.Email, hashedPas, class.ID)

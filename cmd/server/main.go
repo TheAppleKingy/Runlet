@@ -20,7 +20,7 @@ import (
 // @title Runlet API
 // @version 1.0
 // @description API documentation for Runlet
-// @host localhost:8080
+// @host localhost:8081
 // @BasePath /
 func main() {
 	dbUrl := os.Getenv("DATABASE_URL")
@@ -48,12 +48,8 @@ func main() {
 	studentService := service.NewStudentService(courseRepository)
 	studentAuthService := service.NewStudentAuthService(studentRepository, classRepository)
 
-	studentHandler := handlers.NewStudentHandler(studentService, studentAuthService)
-
 	stRouter := apiRouter.Group("/student")
-	stRouter.POST("/login", studentHandler.Login)
-	stRouter.POST("/registration", studentHandler.Register)
-	stRouter.POST("/logout", studentHandler.Logout)
+	handlers.ConnectStudentHandler(stRouter, studentService, studentAuthService)
 
 	//nolint:errcheck
 	router.Run(":8080")

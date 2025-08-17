@@ -21,9 +21,13 @@ func getToken(payload map[string]any) (string, error) {
 	}
 	maps.Copy(claims, payload)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+	signKey := os.Getenv("SECRET_KEY")
+	if signKey == "" {
+		return "", fmt.Errorf("no sign key")
+	}
+	tokenString, err := token.SignedString([]byte(signKey))
 	if err != nil {
-		return "", fmt.Errorf("error get sign token: %w", err)
+		return "", fmt.Errorf("error signing token: %w", err)
 	}
 	return tokenString, nil
 }

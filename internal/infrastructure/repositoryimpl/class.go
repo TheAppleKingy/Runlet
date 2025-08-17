@@ -5,7 +5,6 @@ import (
 	"Runlet/internal/domain/repository"
 	"Runlet/internal/infrastructure/tables"
 	"context"
-	"fmt"
 
 	"github.com/doug-martin/goqu/v9"
 )
@@ -25,7 +24,6 @@ func (r ClassRepository) GetClass(ctx context.Context, num string) (entities.Cla
 	var class entities.Class
 	found, err := r.db.From(tables.ClassTable).Select().Where(goqu.Ex{"number": num}).ScanStruct(&class)
 	if err != nil || !found {
-		fmt.Println(err, "err here")
 		return entities.Class{}, err
 	}
 	return class, nil

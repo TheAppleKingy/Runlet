@@ -61,7 +61,7 @@ create table attempts (
     problem_id int not null,
     primary key (student_id, problem_id),
     amount int not null default 0,
-    constraint amount_gt check (amount > 0),
+    constraint amount_gt check (amount >= 0),
     done boolean default false,
     constraint fk_student foreign key (student_id) references students(id) on delete cascade,
     constraint fk_problem foreign key (problem_id) references problems(id) on delete cascade

@@ -17,11 +17,14 @@ type StudentHandler struct {
 	StudentAuthService *service.StudentAuthService
 }
 
-func NewStudentHandler(studentService *service.StudentService, studentAuthService *service.StudentAuthService) *StudentHandler {
-	return &StudentHandler{
+func ConnectStudentHandler(router *gin.RouterGroup, studentService *service.StudentService, studentAuthService *service.StudentAuthService) {
+	handler := &StudentHandler{
 		StudentService:     studentService,
 		StudentAuthService: studentAuthService,
 	}
+	router.POST("/login", handler.Login)
+	router.POST("/logout", handler.Logout)
+	router.POST("/registration", handler.Register)
 }
 
 // StudentLogin godoc

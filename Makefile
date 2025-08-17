@@ -1,23 +1,30 @@
-export $(shell sed 's/=.*//' .env)
+# export $(shell sed 's/=.*//' .env)
 
 
 docker.up.rebuild: swagger
-	@docker compose up --build
+	@docker compose -f build/dev/docker-compose.dev.yaml up --build
 
 docker.up:
-	@docker compose up
+	@docker compose -f build/dev/docker-compose.dev.yaml up
 
 docker.down:
-	@docker compose down
+	@docker compose -f build/dev/docker-compose.dev.yaml down
 
 docker.teardown:
-	@docker compose down -v --remove-orphans
+	@docker compose -f build/dev/docker-compose.dev.yaml down -v --remove-orphans
 
 migrations.up:
-	@docker compose run --rm migrations sh -c 'migrate -path /migrations -database "$$DATABASE_URL" up'
+	@docker compose -f build/dev/docker-compose.dev.yaml run --rm migrations sh -c 'migrate -path /migration_files -database "$$DATABASE_URL" up'
 
 migrations.down:
-	@docker compose run --rm migrations sh -c 'migrate -path /migrations -database "$$DATABASE_URL" down 1'
+	@docker compose -f build/dev/docker-compose.dev.yaml run --rm migrations sh -c 'migrate -path /migration_files -database "$$DATABASE_URL" down 1'
 
 swagger:
 	@swag init -g ./cmd/server/main.go
+
+docker.up.test_db:
+	@docker compose -f build/test/docker-compose.test.yaml up -d test_database
+	@until docker compose -f build/test/docker-compose.test.yaml exec test_database pg_isready -U test_user; do sleep 1; done
+
+test.integration: docker.up.test_db
+	@docker compose -f build/test/docker-compose.test.yaml run --rm test_app go test ./tests/... -v -cover; docker compose -f build/test/docker-compose.test.yaml down test_database

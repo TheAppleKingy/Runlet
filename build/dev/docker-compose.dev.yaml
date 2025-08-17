@@ -1,12 +1,12 @@
 services:
   runlet_backend_service:
     build:
-      context: .
-      dockerfile: DockerFile
+      context: ../../
+      dockerfile: build/dev/Dockerfile
     env_file:
-      - .env
+      - ../../.env
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       - database
     command: sh -c "/app/app"
@@ -14,26 +14,20 @@ services:
   database:
     image: postgres:17.5-alpine
     env_file:
-      - .env
+      - ../../.env
     volumes:
       - runlet_db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
-  test_database:
-    image: postgres:17.5-alpine
-    environment:
-      - POSTGRES_DB=test_database
-      - POSTGRES_USER=test_user
-      - POSTGRES_PASSWORD=test_password
-
-
   migrations:
-    build: migrations
+    build:
+      context: ../../migration_files/
+      dockerfile: ../build/migrations/Dockerfile
     env_file:
-      - .env
+      - ../../.env
     volumes:
-      - ./migrations/queries:/migrations
+      - ../../migration_files:/migration_files
     depends_on:
       - database
 
