@@ -12,11 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Setup Go ${{ matrix.go-version }}
-      #   uses: actions/setup-go@v5
-      #   with:
-      #     go-version: ${{ matrix.go-version }}
-
       - uses: golangci/golangci-lint-action@v7
         with:
           version: v2.4.0
