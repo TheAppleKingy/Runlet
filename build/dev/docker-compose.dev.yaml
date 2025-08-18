@@ -4,7 +4,7 @@ services:
       context: ../../
       dockerfile: build/dev/Dockerfile
     env_file:
-      - ../../.env
+      - .env
     ports:
       - "8081:8080"
     depends_on:
@@ -14,7 +14,7 @@ services:
   database:
     image: postgres:17.5-alpine
     env_file:
-      - ../../.env
+      - .env
     volumes:
       - runlet_db_data:/var/lib/postgresql/data
     ports:
@@ -25,7 +25,7 @@ services:
       context: ../../migration_files/
       dockerfile: ../build/migrations/Dockerfile
     env_file:
-      - ../../.env
+      - .env
     volumes:
       - ../../migration_files:/migration_files
     depends_on:

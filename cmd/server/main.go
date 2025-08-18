@@ -5,6 +5,7 @@ import (
 	"Runlet/internal/infrastructure/repositoryimpl"
 	"Runlet/internal/interfaces/http/handlers"
 	"database/sql"
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -23,11 +24,14 @@ import (
 // @host localhost:8081
 // @BasePath /
 func main() {
-	dbUrl := os.Getenv("DATABASE_URL")
-	if dbUrl == "" {
-		slog.Error("Database url did not set in environment")
+	dbName := os.Getenv("POSTGRES_DB")
+	dbUser := os.Getenv("POSTGRES_USER")
+	dbPassword := os.Getenv("POSTGRES_PASSWORD")
+	if dbName == "" || dbUser == "" || dbPassword == "" {
+		slog.Error("No db connection params in env")
 		os.Exit(1)
 	}
+	dbUrl := fmt.Sprintf("postgres://%s:%s@database:5432/%s?sslmode=disable", dbUser, dbPassword, dbName)
 	dbClient, err := sql.Open("postgres", dbUrl)
 	if err != nil {
 		slog.Error("error database connection", "error", err)

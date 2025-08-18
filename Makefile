@@ -14,10 +14,10 @@ docker.teardown:
 	@docker compose -f build/dev/docker-compose.dev.yaml down -v --remove-orphans
 
 migrations.up:
-	@docker compose -f build/dev/docker-compose.dev.yaml run --rm migrations sh -c 'migrate -path /migration_files -database "$$DATABASE_URL" up'
+	@docker compose -f build/dev/docker-compose.dev.yaml run --rm migrations sh -c 'migrate -path /migration_files -database "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@database:5432/$$POSTGRES_DB?sslmode=disable" up'
 
 migrations.down:
-	@docker compose -f build/dev/docker-compose.dev.yaml run --rm migrations sh -c 'migrate -path /migration_files -database "$$DATABASE_URL" down 1'
+	@docker compose -f build/dev/docker-compose.dev.yaml run --rm migrations sh -c 'migrate -path /migration_files -database "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@database:5432/$$POSTGRES_DB?sslmode=disable" down 1'
 
 swagger:
 	@swag init -g ./cmd/server/main.go

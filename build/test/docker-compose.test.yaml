@@ -3,8 +3,9 @@ services:
     build:
       context: ../../
       dockerfile: build/test/Dockerfile
-    env_file:
-      - ../../.env
+    environment:
+      - SECRET_KEY=value
+      - JWT_TOKEN_EXPIRE_TIME=2222
     volumes:
       - ../../:/app
     depends_on:
