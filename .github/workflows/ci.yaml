@@ -3,6 +3,7 @@ name: Runlet backend CI
 on:
   pull_request:
     branches:
+      - main
       - develop
 
 jobs:
@@ -11,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.go-version }}
+      # - name: Setup Go ${{ matrix.go-version }}
+      #   uses: actions/setup-go@v5
+      #   with:
+      #     go-version: ${{ matrix.go-version }}
 
       - uses: golangci/golangci-lint-action@v7
         with:
@@ -34,11 +35,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-
-      - name: Setup env
-        run: | 
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" > build/test/.env
-          echo "JWT_TOKEN_EXPIRE_TIME=${{ vars.JWT_TOKEN_EXPIRE_TIME }}" >> build/test/.env
-      
+                
       - name: Test
         run: make test.integration
