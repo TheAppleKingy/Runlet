@@ -22,9 +22,12 @@ migrations.down:
 swagger:
 	@swag init -g ./cmd/server/main.go
 
+lint:
+	@golangci-lint run
+
 docker.up.test_db:
 	@docker compose -f build/test/docker-compose.test.yaml up -d test_database
 	@until docker compose -f build/test/docker-compose.test.yaml exec test_database pg_isready -U test_user; do sleep 1; done
 
-test.integration: docker.up.test_db
+test.integration: lint docker.up.test_db
 	@docker compose -f build/test/docker-compose.test.yaml run --rm test_app go test ./tests/... -v -cover; docker compose -f build/test/docker-compose.test.yaml down test_database
