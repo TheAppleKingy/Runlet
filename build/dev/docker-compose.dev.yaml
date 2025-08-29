@@ -10,6 +10,9 @@ services:
     depends_on:
       - database
     command: sh -c "/app/app"
+    networks:
+      - runlet_network
+      - backend_local
     
   database:
     image: postgres:17.5-alpine
@@ -19,6 +22,8 @@ services:
       - runlet_db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - backend_local
 
   migrations:
     build:
@@ -30,7 +35,14 @@ services:
       - ../../migration_files:/migration_files
     depends_on:
       - database
+    networks:
+      - backend_local
 
 
 volumes:
   runlet_db_data:
+
+networks:
+  runlet_network:
+    external: true
+  backend_local:

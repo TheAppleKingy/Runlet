@@ -9,9 +9,9 @@
     "host": "localhost:8081",
     "basePath": "/",
     "paths": {
-        "/api/student/login": {
+        "/api/auth/login": {
             "post": {
-                "description": "Login endpoint for student",
+                "description": "Login endpoint",
                 "consumes": [
                     "application/json"
                 ],
@@ -19,17 +19,17 @@
                     "application/json"
                 ],
                 "tags": [
-                    "student/auth"
+                    "auth"
                 ],
-                "summary": "StudentLogin",
+                "summary": "Login",
                 "parameters": [
                     {
-                        "description": "Data for login student",
+                        "description": "Data for login",
                         "name": "loginData",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LoginDTO"
+                            "$ref": "#/definitions/dto.Login"
                         }
                     }
                 ],
@@ -55,9 +55,9 @@
                 }
             }
         },
-        "/api/student/logout": {
+        "/api/auth/logout": {
             "post": {
-                "description": "Logout endpoint for student",
+                "description": "Logout endpoint",
                 "consumes": [
                     "application/json"
                 ],
@@ -65,7 +65,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "student/auth"
+                    "auth"
                 ],
                 "summary": "Logout",
                 "responses": {
@@ -90,7 +90,7 @@
                 }
             }
         },
-        "/api/student/registration": {
+        "/api/auth/registration_student": {
             "post": {
                 "description": "Registration endpoint for student",
                 "consumes": [
@@ -100,7 +100,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "student/auth"
+                    "auth"
                 ],
                 "summary": "StudentRegister",
                 "parameters": [
@@ -110,7 +110,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RegistrationDTO"
+                            "$ref": "#/definitions/dto.StudentRegistration"
                         }
                     }
                 ],
@@ -135,25 +135,271 @@
                     }
                 }
             }
+        },
+        "/api/auth/registration_teacher": {
+            "post": {
+                "description": "Registration endpoint for teacher",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "TeacherRegister",
+                "parameters": [
+                    {
+                        "description": "Data for registration teacher",
+                        "name": "registrationData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.TeacherRegistration"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/student/courses/": {
+            "get": {
+                "description": "Returns all student's courses",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "student/courses"
+                ],
+                "summary": "GetMyCourses",
+                "responses": {
+                    "200": {
+                        "description": "Example of course data",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.CourseForStudent"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/student/courses/{course_id}/problems": {
+            "get": {
+                "description": "Returns student's problems by course",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "student/courses"
+                ],
+                "summary": "GetMyProblems",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Course ID",
+                        "name": "course_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Example of problem data",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Problem"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/student/problems/{problem_id}/send_solution": {
+            "post": {
+                "description": "Sending solutions code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "student/problems"
+                ],
+                "summary": "SendSolution",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Problem ID",
+                        "name": "problem_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data for sending code solution",
+                        "name": "sendCodeData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CodeSolution"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Example of response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Problem"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "dto.LoginDTO": {
+        "dto.CodeSolution": {
+            "type": "object",
+            "required": [
+                "code",
+                "lang"
+            ],
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "lang": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CourseForStudent": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "problems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProblemForCourse"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Login": {
             "type": "object",
             "required": [
                 "email",
+                "is_student",
                 "password"
             ],
             "properties": {
                 "email": {
                     "type": "string"
                 },
+                "is_student": {
+                    "type": "boolean"
+                },
                 "password": {
                     "type": "string"
                 }
             }
         },
-        "dto.RegistrationDTO": {
+        "dto.ProblemForCourse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.StudentRegistration": {
             "type": "object",
             "required": [
                 "class",
@@ -173,6 +419,216 @@
                 },
                 "password": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.TeacherRegistration": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Attempt": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "done": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "problem_id": {
+                    "type": "integer"
+                },
+                "student_id": {
+                    "type": "integer"
+                },
+                "test_cases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.TestCase"
+                    }
+                }
+            }
+        },
+        "entities.Class": {
+            "type": "object",
+            "properties": {
+                "courses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Course"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "number": {
+                    "type": "string"
+                },
+                "students": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Student"
+                    }
+                },
+                "teachers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Teacher"
+                    }
+                }
+            }
+        },
+        "entities.Course": {
+            "type": "object",
+            "properties": {
+                "classes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Class"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "problems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Problem"
+                    }
+                },
+                "teachers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Teacher"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Problem": {
+            "type": "object",
+            "properties": {
+                "attempts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Attempt"
+                    }
+                },
+                "course_id": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "students": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Student"
+                    }
+                },
+                "test_cases": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.TestCase"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Student": {
+            "type": "object",
+            "properties": {
+                "class_id": {
+                    "type": "integer"
+                },
+                "courses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Course"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Teacher": {
+            "type": "object",
+            "properties": {
+                "classes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Class"
+                    }
+                },
+                "courses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.Course"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.TestCase": {
+            "type": "object",
+            "properties": {
+                "input": {
+                    "type": "string"
+                },
+                "output": {
+                    "type": "string"
+                },
+                "test_num": {
+                    "type": "integer"
                 }
             }
         }

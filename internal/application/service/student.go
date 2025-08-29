@@ -2,62 +2,90 @@ package service
 
 import (
 	"Runlet/internal/application/dto"
+	"Runlet/internal/domain/entities"
 	"Runlet/internal/domain/repository"
-	"Runlet/internal/infrastructure/security"
-	"Runlet/internal/infrastructure/security/token"
+	"Runlet/internal/interfaces/grpc"
 	"context"
-	"fmt"
+	"encoding/json"
+	"log/slog"
 )
 
-type StudentAuthService struct {
-	StudentRepository repository.StudentRepositoryInterface
-	ClassRepository   repository.ClassRepositoryInterface
-}
-
-func NewStudentAuthService(studentRepo repository.StudentRepositoryInterface, classRepo repository.ClassRepositoryInterface) *StudentAuthService {
-	return &StudentAuthService{
-		StudentRepository: studentRepo,
-		ClassRepository:   classRepo,
-	}
-}
-
-func (s StudentAuthService) Login(ctx context.Context, loginDTO dto.LoginDTO) (string, error) {
-	student, err := s.StudentRepository.GetStudentByEmail(ctx, loginDTO.Email)
-	if err != nil || student.ID == 0 {
-		return "", fmt.Errorf("unable to found student: %v", err)
-	}
-	if !security.CheckPassword(loginDTO.Password, student.Password) {
-		return "", fmt.Errorf("wrong password")
-	}
-	token, err := token.GetTokenForStudent(student.ID)
-	if err != nil {
-		return "", fmt.Errorf("unable to create token: %v", err)
-	}
-	return token, nil
-}
-
-func (s StudentAuthService) Register(ctx context.Context, registerDTO dto.RegistrationDTO) error {
-	hashedPas, err := security.HashPassword(registerDTO.Password)
-	if err != nil {
-		return fmt.Errorf("error processing password: %v", err)
-	}
-	class, err := s.ClassRepository.GetClass(ctx, registerDTO.ClassNum)
-	if err != nil || class.ID == 0 {
-		return fmt.Errorf("unable to found student class: %v", err)
-	}
-	_, err = s.StudentRepository.CreateStudent(ctx, registerDTO.Name, registerDTO.Email, hashedPas, class.ID)
-	if err != nil {
-		return fmt.Errorf("unable to create student: %v", err)
-	}
-	return nil
-}
-
 type StudentService struct {
-	CourseRepository repository.CourseRepositoryInterface
+	CourseRepository  repository.CourseRepositoryInterface
+	ProblemRepository repository.ProblemRepositoryInterface
+	AttemptRepository repository.AttemptRepositoryInteface
 }
 
-func NewStudentService(courseRepo repository.CourseRepositoryInterface) *StudentService {
+func NewStudentService(
+	courseRepo repository.CourseRepositoryInterface,
+	problemRepo repository.ProblemRepositoryInterface,
+	attemptRepo repository.AttemptRepositoryInteface) *StudentService {
 	return &StudentService{
-		CourseRepository: courseRepo,
+		CourseRepository:  courseRepo,
+		ProblemRepository: problemRepo,
+		AttemptRepository: attemptRepo,
+	}
+}
+
+func (s StudentService) GetStudentCourses(ctx context.Context, studentId int) ([]entities.Course, error) {
+	return s.CourseRepository.GetAllStudentCourses(ctx, studentId)
+}
+
+func (s StudentService) GetStudentProblems(ctx context.Context, studentId int, courseId int) ([]entities.Problem, error) {
+	return s.ProblemRepository.GetCourseProblems(ctx, courseId)
+}
+
+func (s StudentService) SendCodeSolution(ctx context.Context, studentId int, problemId int, data dto.CodeSolution) {
+	done := s.AttemptRepository.CheckProblemIsDone(ctx, problemId, studentId)
+	if done {
+		slog.Error("problem is already done", "problem_id", problemId, "student_id", studentId, "runner", data.Lang)
+		return
+	}
+
+	results, err := s.AttemptRepository.GetCurrentResults(ctx, problemId, studentId)
+	if err != nil {
+		slog.Error("cannot get current results", "problem_id", problemId, "student_id", studentId, "runner", data.Lang)
+	}
+	defer func() {
+		//nolint:errcheck
+		s.AttemptRepository.AddAttepmt(ctx, studentId, problemId, done, results)
+	}()
+
+	cases, err := s.ProblemRepository.GetProblemTestCases(ctx, problemId)
+	if err != nil || len(cases) == 0 {
+		slog.Error("cannot get test cases", "problem_id", problemId, "student_id", studentId, "runner", data.Lang)
+		return
+	}
+	testCasesMap := make(map[int]entities.TestCase)
+	var testsData []dto.RunTestData
+	for _, testCase := range cases {
+		testCasesMap[testCase.TestNum] = testCase
+		testsData = append(testsData, dto.RunTestData{TestNum: testCase.TestNum, Input: testCase.Input})
+	}
+
+	runner, err := grpc.NewRunner(data.Lang)
+	if err != nil {
+		slog.Error("cannot get grpc client", "error", err, "problem_id", problemId, "student_id", studentId, "runner", data.Lang)
+		return
+	}
+	resp, err := runner.Run(ctx, studentId, problemId, data.Code, testsData)
+	if err != nil {
+		slog.Error("cannot call grpc method", "error", err, "problem_id", problemId, "student_id", studentId, "runner", data.Lang)
+		return
+	}
+	if err := json.Unmarshal(resp.Results, &results); err != nil {
+		slog.Error("cannot decode grpc response", "problem_id", problemId, "student_id", studentId, "runner", data.Lang)
+		return
+	}
+
+	testsPassed := true
+	for _, caseRes := range results {
+		if caseRes.Output != testCasesMap[caseRes.TestNum].Output {
+			testsPassed = false
+			break
+		}
+	}
+	if testsPassed {
+		done = true
 	}
 }

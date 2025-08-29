@@ -3,7 +3,7 @@ package repositoryimpl
 import (
 	"Runlet/internal/domain/entities"
 	"Runlet/internal/domain/repository"
-	"Runlet/internal/infrastructure/tables"
+	textdata "Runlet/internal/infrastructure/text_data"
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
@@ -22,7 +22,7 @@ func NewStudentRepository(db *goqu.Database) *StudentRepository {
 
 func (r StudentRepository) GetStudent(ctx context.Context, id int) (entities.Student, error) {
 	var student entities.Student
-	found, err := r.db.From(tables.StudentTable).Select().Where(goqu.Ex{"id": id}).ScanStruct(&student)
+	found, err := r.db.From(textdata.StudentTable).Select().Where(goqu.Ex{"id": id}).ScanStruct(&student)
 	if err != nil || !found {
 		return entities.Student{}, err
 	}
@@ -31,7 +31,7 @@ func (r StudentRepository) GetStudent(ctx context.Context, id int) (entities.Stu
 
 func (r StudentRepository) GetStudentByEmail(ctx context.Context, email string) (entities.Student, error) {
 	var student entities.Student
-	found, err := r.db.From(tables.StudentTable).Select().Where(goqu.Ex{"email": email}).ScanStruct(&student)
+	found, err := r.db.From(textdata.StudentTable).Select().Where(goqu.Ex{"email": email}).ScanStruct(&student)
 	if err != nil || !found {
 		return entities.Student{}, err
 	}
@@ -40,7 +40,7 @@ func (r StudentRepository) GetStudentByEmail(ctx context.Context, email string) 
 
 func (r StudentRepository) CreateStudent(ctx context.Context, name string, email string, hashedPassword string, classID int) (entities.Student, error) {
 	var student entities.Student
-	created, err := r.db.Insert(tables.StudentTable).Rows(goqu.Record{
+	created, err := r.db.Insert(textdata.StudentTable).Rows(goqu.Record{
 		"name":     name,
 		"email":    email,
 		"password": hashedPassword,

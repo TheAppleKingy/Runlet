@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package runner;
+
+option go_package = ".;runner";
+
+service Runner {
+    rpc RunCode (RunCodeRequest) returns (RunCodeResponse);
+}
+
+message RunCodeRequest {
+  int32 student = 1;
+  int32 problem = 2;
+  string code = 3;
+  string lang = 4;
+  bytes cases = 5; //json string in format `[{"test_num": 0, "input": "..."}, ...]`
+}
+
+message RunCodeResponse {
+  bytes results = 1; //json string in format `[{"test_num": 0, "input": "...", "output": "..."}, ...]`
+}
