@@ -33,9 +33,9 @@ CREATE TABLE problems (
     title VARCHAR(70) not null,
     description TEXT not null,
     course_id int not null,
-    constraint fk_course foreign key (course_id) references courses(id) on delete cascade 
+    constraint fk_course foreign key (course_id) references courses(id) on delete cascade,
+    test_cases jsonb not null /*json string in format `[{"test_num": 0, "input": "...", "output": "..."}, ...]`*/
 );
-
 
 CREATE TABLE teachers_classes (
     teacher_id INT NOT NULL,
@@ -45,8 +45,6 @@ CREATE TABLE teachers_classes (
     constraint fk_class FOREIGN KEY (class_id) REFERENCES classes(id) on delete CASCADE
 );
 
-
-
 create table classes_courses (
     class_id int not null,
     course_id int not null,
@@ -55,7 +53,6 @@ create table classes_courses (
     constraint fk_course foreign key (course_id) references courses(id) on delete cascade
 );
 
-
 create table attempts (
     student_id int not null,
     problem_id int not null,
@@ -63,6 +60,7 @@ create table attempts (
     amount int not null default 0,
     constraint amount_gt check (amount >= 0),
     done boolean default false,
+    test_cases jsonb, /*json string in format `[{"test_num": 0, "input": "...", "output": "..."}, ...]`*/
     constraint fk_student foreign key (student_id) references students(id) on delete cascade,
     constraint fk_problem foreign key (problem_id) references problems(id) on delete cascade
 );

@@ -1,16 +1,49 @@
 basePath: /
 definitions:
-  dto.LoginDTO:
+  dto.CodeSolution:
+    properties:
+      code:
+        type: string
+      lang:
+        type: string
+    required:
+    - code
+    - lang
+    type: object
+  dto.CourseForStudent:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      problems:
+        items:
+          $ref: '#/definitions/dto.ProblemForCourse'
+        type: array
+      title:
+        type: string
+    type: object
+  dto.Login:
     properties:
       email:
         type: string
+      is_student:
+        type: boolean
       password:
         type: string
     required:
     - email
+    - is_student
     - password
     type: object
-  dto.RegistrationDTO:
+  dto.ProblemForCourse:
+    properties:
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  dto.StudentRegistration:
     properties:
       class:
         type: string
@@ -26,6 +59,144 @@ definitions:
     - name
     - password
     type: object
+  dto.TeacherRegistration:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  entities.Attempt:
+    properties:
+      amount:
+        type: integer
+      done:
+        type: boolean
+      id:
+        type: integer
+      problem_id:
+        type: integer
+      student_id:
+        type: integer
+      test_cases:
+        items:
+          $ref: '#/definitions/entities.TestCase'
+        type: array
+    type: object
+  entities.Class:
+    properties:
+      courses:
+        items:
+          $ref: '#/definitions/entities.Course'
+        type: array
+      id:
+        type: integer
+      number:
+        type: string
+      students:
+        items:
+          $ref: '#/definitions/entities.Student'
+        type: array
+      teachers:
+        items:
+          $ref: '#/definitions/entities.Teacher'
+        type: array
+    type: object
+  entities.Course:
+    properties:
+      classes:
+        items:
+          $ref: '#/definitions/entities.Class'
+        type: array
+      description:
+        type: string
+      id:
+        type: integer
+      problems:
+        items:
+          $ref: '#/definitions/entities.Problem'
+        type: array
+      teachers:
+        items:
+          $ref: '#/definitions/entities.Teacher'
+        type: array
+      title:
+        type: string
+    type: object
+  entities.Problem:
+    properties:
+      attempts:
+        items:
+          $ref: '#/definitions/entities.Attempt'
+        type: array
+      course_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      students:
+        items:
+          $ref: '#/definitions/entities.Student'
+        type: array
+      test_cases:
+        items:
+          $ref: '#/definitions/entities.TestCase'
+        type: array
+      title:
+        type: string
+    type: object
+  entities.Student:
+    properties:
+      class_id:
+        type: integer
+      courses:
+        items:
+          $ref: '#/definitions/entities.Course'
+        type: array
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  entities.Teacher:
+    properties:
+      classes:
+        items:
+          $ref: '#/definitions/entities.Class'
+        type: array
+      courses:
+        items:
+          $ref: '#/definitions/entities.Course'
+        type: array
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  entities.TestCase:
+    properties:
+      input:
+        type: string
+      output:
+        type: string
+      test_num:
+        type: integer
+    type: object
 host: localhost:8081
 info:
   contact: {}
@@ -33,18 +204,18 @@ info:
   title: Runlet API
   version: "1.0"
 paths:
-  /api/student/login:
+  /api/auth/login:
     post:
       consumes:
       - application/json
-      description: Login endpoint for student
+      description: Login endpoint
       parameters:
-      - description: Data for login student
+      - description: Data for login
         in: body
         name: loginData
         required: true
         schema:
-          $ref: '#/definitions/dto.LoginDTO'
+          $ref: '#/definitions/dto.Login'
       produces:
       - application/json
       responses:
@@ -60,14 +231,14 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: StudentLogin
+      summary: Login
       tags:
-      - student/auth
-  /api/student/logout:
+      - auth
+  /api/auth/logout:
     post:
       consumes:
       - application/json
-      description: Logout endpoint for student
+      description: Logout endpoint
       produces:
       - application/json
       responses:
@@ -85,8 +256,8 @@ paths:
             type: object
       summary: Logout
       tags:
-      - student/auth
-  /api/student/registration:
+      - auth
+  /api/auth/registration_student:
     post:
       consumes:
       - application/json
@@ -97,7 +268,7 @@ paths:
         name: registrationData
         required: true
         schema:
-          $ref: '#/definitions/dto.RegistrationDTO'
+          $ref: '#/definitions/dto.StudentRegistration'
       produces:
       - application/json
       responses:
@@ -115,5 +286,134 @@ paths:
             type: object
       summary: StudentRegister
       tags:
-      - student/auth
+      - auth
+  /api/auth/registration_teacher:
+    post:
+      consumes:
+      - application/json
+      description: Registration endpoint for teacher
+      parameters:
+      - description: Data for registration teacher
+        in: body
+        name: registrationData
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TeacherRegistration'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: TeacherRegister
+      tags:
+      - auth
+  /api/student/courses/:
+    get:
+      consumes:
+      - application/json
+      description: Returns all student's courses
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Example of course data
+          schema:
+            items:
+              $ref: '#/definitions/dto.CourseForStudent'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: GetMyCourses
+      tags:
+      - student/courses
+  /api/student/courses/{course_id}/problems:
+    get:
+      consumes:
+      - application/json
+      description: Returns student's problems by course
+      parameters:
+      - description: Course ID
+        in: path
+        name: course_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Example of problem data
+          schema:
+            items:
+              $ref: '#/definitions/entities.Problem'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: GetMyProblems
+      tags:
+      - student/courses
+  /api/student/problems/{problem_id}/send_solution:
+    post:
+      consumes:
+      - application/json
+      description: Sending solutions code
+      parameters:
+      - description: Problem ID
+        in: path
+        name: problem_id
+        required: true
+        type: integer
+      - description: Data for sending code solution
+        in: body
+        name: sendCodeData
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CodeSolution'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Example of response
+          schema:
+            items:
+              $ref: '#/definitions/entities.Problem'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: SendSolution
+      tags:
+      - student/problems
 swagger: "2.0"

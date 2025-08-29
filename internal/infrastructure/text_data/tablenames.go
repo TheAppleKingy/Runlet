@@ -1,4 +1,4 @@
-package tables
+package textdata
 
 const (
 	StudentTable = "students"
@@ -6,4 +6,6 @@ const (
 	CourseTable  = "courses"
 	ProblemTable = "problems"
 	ClassTable   = "classes"
+	AttemptTable = "attempts"
+	TestTable    = "tests"
 )

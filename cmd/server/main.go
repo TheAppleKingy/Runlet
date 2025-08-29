@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strconv"
 
 	_ "Runlet/docs"
 
@@ -37,23 +38,28 @@ func main() {
 		slog.Error("error database connection", "error", err)
 		os.Exit(1)
 	}
+
 	db := goqu.New("postgres", dbClient)
+
 	router := gin.Default()
-	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	if debug, _ := strconv.ParseBool(os.Getenv("DEBUG")); debug {
+		router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
 	apiRouter := router.Group("/api")
 
 	classRepository := repositoryimpl.NewClassRepository(db)
 	courseRepository := repositoryimpl.NewCourseRepository(db)
 	studentRepository := repositoryimpl.NewStudentRepository(db)
-	// teacherRepository := repositoryimpl.NewTeacherRepository(db)
-	// problemRepository := repositoryimpl.NewProblemRepository(db)
+	teacherRepository := repositoryimpl.NewTeacherRepository(db)
+	problemRepository := repositoryimpl.NewProblemRepository(db)
+	attemptRepository := repositoryimpl.NewAttemptRepository(db)
 
-	studentService := service.NewStudentService(courseRepository)
-	studentAuthService := service.NewStudentAuthService(studentRepository, classRepository)
+	studentService := service.NewStudentService(courseRepository, problemRepository, attemptRepository)
+	authService := service.NewAuthService(studentRepository, teacherRepository, classRepository)
 
-	stRouter := apiRouter.Group("/student")
-	handlers.ConnectStudentHandler(stRouter, studentService, studentAuthService)
+	handlers.ConnectAuthHandler(apiRouter, authService)
+	handlers.ConnectStudentHandler(apiRouter, authService, studentService)
 
 	//nolint:errcheck
 	router.Run(":8080")
