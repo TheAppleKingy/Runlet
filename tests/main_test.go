@@ -49,9 +49,11 @@ func TestMain(m *testing.M) {
 	slog.Info("Start test server\n\n")
 	server := httptest.NewServer(getTestServer(db))
 	defer server.Close()
+
 	MainURL = server.URL + "/test"
 	slog.Info("Test server runned", "MainURL", MainURL)
 	fmt.Print("\n")
+
 	slog.Info("Start tests\n\n")
 	code := m.Run()
 	fmt.Print("\n")
