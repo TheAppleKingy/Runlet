@@ -33,7 +33,6 @@ definitions:
         type: string
     required:
     - email
-    - is_student
     - password
     type: object
   dto.ProblemForCourse:

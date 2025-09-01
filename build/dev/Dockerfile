@@ -11,11 +11,12 @@ COPY . .
 RUN swag init -g ./cmd/server/main.go    
 RUN CGO_ENABLED=0 GOOS=linux go build -o app ./cmd/server
 
-FROM alpine:latest
+FROM scratch
 
 WORKDIR /app
 
 COPY --from=builder /app/app .
 
-
 EXPOSE 8081
+
+ENTRYPOINT [ "/app/app" ]

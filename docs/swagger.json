@@ -373,7 +373,6 @@
             "type": "object",
             "required": [
                 "email",
-                "is_student",
                 "password"
             ],
             "properties": {

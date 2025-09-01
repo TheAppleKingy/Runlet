@@ -47,7 +47,7 @@ func (r Runner) Run(ctx context.Context, studentId int, problemid int, code stri
 		Cases:   casesBytes,
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	return r.grpcClient.RunCode(ctx, &req)
 }
