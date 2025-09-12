@@ -1,10 +1,10 @@
-package tests
+package http
 
 import (
+	"Runlet/tests/fixtures"
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -17,7 +17,7 @@ import (
 
 var MainURL string
 
-// db is for access the database in tests. it need for deleting rows created/updated in the relevants tests
+// db is for access the database in tests. it need for deleting/rolling back rows created/updated in the relevants tests
 var db *goqu.Database
 
 func TestMain(m *testing.M) {
@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 	defer cli.Close()
 
 	db = goqu.New("postgres", cli)
-	mg, err := migrate.New("file://../migration_files", testDbUrl)
+	mg, err := migrate.New("file://../../../migration_files", testDbUrl)
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)
@@ -43,21 +43,21 @@ func TestMain(m *testing.M) {
 	slog.Info("Migrations applied\n\n")
 
 	slog.Info("Start setup test database")
-	setUpDb(db)
+	fixtures.SetUpDb(db)
 	slog.Info("Database setup\n\n")
 
 	slog.Info("Start test server\n\n")
-	server := httptest.NewServer(getTestServer(db))
+	server := fixtures.GetTestHTTPServer(db)
 	defer server.Close()
-
 	MainURL = server.URL + "/test"
+
 	slog.Info("Test server runned", "MainURL", MainURL)
 	fmt.Print("\n")
 
-	slog.Info("Start tests\n\n")
+	slog.Info("Start integration tests\n\n")
 	code := m.Run()
 	fmt.Print("\n")
-	slog.Info("Tests finished\n\n")
+	slog.Info("Integration tests finished\n\n")
 
 	slog.Info("Start dropping migrations in test database")
 	mg.Drop()

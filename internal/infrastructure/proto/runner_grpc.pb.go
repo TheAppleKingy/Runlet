@@ -4,7 +4,7 @@
 // - protoc             v6.31.1
 // source: internal/infrastructure/proto/runner.proto
 
-package runner
+package grpc_interfaces
 
 import (
 	context "context"
@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Runner_RunCode_FullMethodName = "/runner.Runner/RunCode"
+	Runner_RunCode_FullMethodName = "/grpc_interfaces.Runner/RunCode"
 )
 
 // RunnerClient is the client API for Runner service.
@@ -108,7 +108,7 @@ func _Runner_RunCode_Handler(srv interface{}, ctx context.Context, dec func(inte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Runner_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "runner.Runner",
+	ServiceName: "grpc_interfaces.Runner",
 	HandlerType: (*RunnerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

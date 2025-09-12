@@ -1,4 +1,4 @@
-package repository
+package interfaces
 
 import (
 	"Runlet/internal/domain/entities"
@@ -6,7 +6,7 @@ import (
 	"context"
 )
 
-type CourseRepositoryInterface interface {
+type CourseRepository interface {
 	GetCourseById(ctx context.Context, id int) (entities.Course, error)
 	GetAllCourses(ctx context.Context) ([]entities.Course, error)
 	GetAllStudentCourses(ctx context.Context, studentId int) ([]entities.Course, error)
@@ -14,4 +14,5 @@ type CourseRepositoryInterface interface {
 	DeleteCourse(ctx context.Context, id int) error
 	AddClasses(ctx context.Context, courseId int, classesIds []int) ([]entities.Class, error)
 	DeleteClasses(ctx context.Context, courseId int, classesIds []int) ([]entities.Class, error)
+	CheckStudent(ctx context.Context, studentId int, courseId int) bool
 }

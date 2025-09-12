@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package runner;
+package grpc_interfaces;
 
-option go_package = ".;runner";
+option go_package = ".;grpc_interfaces";
 
 service Runner {
     rpc RunCode (RunCodeRequest) returns (RunCodeResponse);

@@ -1,4 +1,4 @@
-package tests
+package http
 
 import (
 	"Runlet/internal/application/dto"
@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 const contentType string = "application/json"
@@ -23,14 +23,15 @@ func TestStudentLoginOk(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"detail": "logged in"})
 	recieved, _ := io.ReadAll(resp.Body)
 	cookies := resp.Cookies()
 	assert.Equal(t, len(cookies), 1)
+	assert.Equal(t, len(cookies), 1)
 	assert.Equal(t, cookies[0].Name, "token")
-	assert.Assert(t, cookies[0].MaxAge > 0)
+	assert.True(t, cookies[0].MaxAge > 0)
 	student, _ := token.GetStudentFromToken(cookies[0].Value)
 	assert.Equal(t, student, 1)
 	assert.Equal(t, resp.StatusCode, 200)
@@ -45,12 +46,12 @@ func TestStudentLoginNotExists(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, err := json.Marshal(map[string]string{"error": "unable to found student: <nil>"})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(recieved), string(expected))
 }
@@ -63,12 +64,12 @@ func TestStudentLoginWrongPass(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, err := json.Marshal(map[string]string{"error": "wrong password"})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(recieved), string(expected))
 }
@@ -83,12 +84,12 @@ func TestStudentLoginNoExpTime(t *testing.T) {
 	os.Unsetenv("JWT_TOKEN_EXPIRE_TIME")
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
 	os.Setenv("JWT_TOKEN_EXPIRE_TIME", expTime)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, err := json.Marshal(map[string]string{"error": "unable to create token: error getting token exp time: strconv.Atoi: parsing \"\": invalid syntax"})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(recieved), string(expected))
 }
@@ -103,12 +104,12 @@ func TestStudentLoginNoSecret(t *testing.T) {
 	os.Unsetenv("SECRET_KEY")
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
 	os.Setenv("SECRET_KEY", sKey)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, err := json.Marshal(map[string]string{"error": "unable to create token: no sign key"})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(recieved), string(expected))
 }
@@ -125,7 +126,7 @@ func TestStudentRegistrationOk(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/registration_student", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"detail": "registration successfully"})
 	recieved, _ := io.ReadAll(resp.Body)
@@ -142,7 +143,7 @@ func TestStudentRegistrationEmailAlreadyExists(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/registration_student", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"error": "unable to create student: pq: duplicate key value violates unique constraint \"students_email_key\""})
 	recieved, _ := io.ReadAll(resp.Body)
@@ -159,7 +160,7 @@ func TestStudentRegistrationNoClassExists(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/registration_student", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"error": "unable to found student class: <nil>"})
 	recieved, _ := io.ReadAll(resp.Body)
@@ -176,7 +177,7 @@ func TestStudentRegistrationInvalidEmailFormat(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/registration_student", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"error": "unable to create student: pq: value for domain email_type violates check constraint \"email_type_check\""})
 	recieved, _ := io.ReadAll(resp.Body)
@@ -187,7 +188,7 @@ func TestStudentRegistrationInvalidEmailFormat(t *testing.T) {
 func TestLogout(t *testing.T) {
 	body, _ := json.Marshal(nil)
 	resp, err := http.Post(MainURL+"/auth/logout", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"detail": "logged out"})
 	recieved, _ := io.ReadAll(resp.Body)
@@ -207,14 +208,14 @@ func TestTeacherLoginOk(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"detail": "logged in"})
 	recieved, _ := io.ReadAll(resp.Body)
 	cookies := resp.Cookies()
 	assert.Equal(t, len(cookies), 1)
 	assert.Equal(t, cookies[0].Name, "token")
-	assert.Assert(t, cookies[0].MaxAge > 0)
+	assert.True(t, cookies[0].MaxAge > 0)
 	teacher, _ := token.GetTeacherFromToken(cookies[0].Value)
 	assert.Equal(t, teacher, 1)
 	assert.Equal(t, resp.StatusCode, 200)
@@ -229,12 +230,12 @@ func TestTeacherLoginNotExists(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, err := json.Marshal(map[string]string{"error": "unable to found teacher: <nil>"})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(recieved), string(expected))
 }
@@ -247,12 +248,12 @@ func TestTeacherLoginWrongPass(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, err := json.Marshal(map[string]string{"error": "wrong password"})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(recieved), string(expected))
 }
@@ -267,12 +268,12 @@ func TestTeacherLoginNoExpTime(t *testing.T) {
 	os.Unsetenv("JWT_TOKEN_EXPIRE_TIME")
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
 	os.Setenv("JWT_TOKEN_EXPIRE_TIME", expTime)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, err := json.Marshal(map[string]string{"error": "unable to create token: error getting token exp time: strconv.Atoi: parsing \"\": invalid syntax"})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(recieved), string(expected))
 }
@@ -287,12 +288,12 @@ func TestTeacherLoginNoSecret(t *testing.T) {
 	os.Unsetenv("SECRET_KEY")
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
 	os.Setenv("SECRET_KEY", sKey)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, err := json.Marshal(map[string]string{"error": "unable to create token: no sign key"})
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(recieved), string(expected))
 }
@@ -308,7 +309,7 @@ func TestTeacherRegistrationOk(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/registration_teacher", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"detail": "registration successfully"})
 	recieved, _ := io.ReadAll(resp.Body)
@@ -324,7 +325,7 @@ func TestTeacherRegistrationEmailAlreadyExists(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/registration_teacher", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"error": "unable to create teacher: pq: duplicate key value violates unique constraint \"teachers_email_key\""})
 	recieved, _ := io.ReadAll(resp.Body)
@@ -340,7 +341,7 @@ func TestTeacherRegistrationInvalidEmailFormat(t *testing.T) {
 	})
 
 	resp, err := http.Post(MainURL+"/auth/registration_teacher", contentType, bytes.NewBuffer(body))
-	assert.NilError(t, err)
+	assert.NoError(t, err)
 	defer resp.Body.Close()
 	expected, _ := json.Marshal(map[string]string{"error": "unable to create teacher: pq: value for domain email_type violates check constraint \"email_type_check\""})
 	recieved, _ := io.ReadAll(resp.Body)

@@ -1,40 +1,36 @@
-package tests
+package fixtures
 
 import (
-	"Runlet/internal/application/service"
+	"Runlet/internal/config"
 	"Runlet/internal/domain/entities"
-	"Runlet/internal/infrastructure/repositoryimpl"
 	"Runlet/internal/infrastructure/security"
-	textdata "Runlet/internal/infrastructure/text_data"
-	"Runlet/internal/interfaces/http/handlers"
 	"log/slog"
 	"os"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exec"
-	"github.com/gin-gonic/gin"
 )
 
-func setUpDb(db *goqu.Database) {
+func SetUpDb(db *goqu.Database) {
 	hsh, _ := security.HashPassword("test_password")
 	executors := []exec.QueryExecutor{
-		db.Insert(textdata.ClassTable).Rows(goqu.Record{
+		db.Insert(config.Tables.Class).Rows(goqu.Record{
 			"number": "111111",
 		}).Executor(),
 
-		db.Insert(textdata.StudentTable).Rows(goqu.Record{
+		db.Insert(config.Tables.Student).Rows(goqu.Record{
 			"name":     "test_student",
 			"email":    "test@mail",
 			"password": hsh,
 			"class_id": 1,
 		}).Executor(),
 
-		db.Insert(textdata.CourseTable).Rows(goqu.Record{
+		db.Insert(config.Tables.Course).Rows(goqu.Record{
 			"title":       "test_course",
 			"description": "test_description",
 		}).Executor(),
 
-		db.Insert(textdata.TeacherTable).Rows(
+		db.Insert(config.Tables.Teacher).Rows(
 			goqu.Record{
 				"name":     "test_teacher",
 				"email":    "test_t@mail",
@@ -49,7 +45,7 @@ func setUpDb(db *goqu.Database) {
 			},
 		).Executor(),
 
-		db.Insert(textdata.ProblemTable).Rows(goqu.Record{
+		db.Insert(config.Tables.Problem).Rows(goqu.Record{
 			"title":       "test_problem",
 			"description": "test_pr_descr",
 			"course_id":   1,
@@ -79,23 +75,4 @@ func setUpDb(db *goqu.Database) {
 			os.Exit(1)
 		}
 	}
-}
-
-func getTestServer(db *goqu.Database) *gin.Engine {
-	studentRepo := repositoryimpl.NewStudentRepository(db)
-	classRepo := repositoryimpl.NewClassRepository(db)
-	courseRepo := repositoryimpl.NewCourseRepository(db)
-	teacherRepo := repositoryimpl.NewTeacherRepository(db)
-	problemRepo := repositoryimpl.NewProblemRepository(db)
-	attemptRepo := repositoryimpl.NewAttemptRepository(db)
-
-	authService := service.NewAuthService(studentRepo, teacherRepo, classRepo)
-	studentService := service.NewStudentService(courseRepo, problemRepo, attemptRepo)
-
-	r := gin.New()
-	gin.SetMode(gin.TestMode)
-	testGroup := r.Group("/test")
-	handlers.ConnectStudentHandler(testGroup, authService, studentService)
-	handlers.ConnectAuthHandler(testGroup, authService)
-	return r
 }
