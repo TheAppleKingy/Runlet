@@ -1,16 +1,14 @@
 package implementations
 
 import (
-	"Runlet/internal/config"
 	"Runlet/internal/domain/entities"
-	"Runlet/internal/domain/interfaces"
+	"Runlet/internal/infrastructure/config"
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
 )
 
 type ClassRepository struct {
-	interfaces.ClassRepository
 	db *goqu.Database
 }
 
@@ -43,4 +41,8 @@ func (r ClassRepository) CreateClass(ctx context.Context, num string) (entities.
 func (r ClassRepository) DeleteClass(ctx context.Context, id int) error {
 	_, err := r.db.Delete(config.Tables.Class).Where(goqu.Ex{"id": id}).Executor().Exec()
 	return err
+}
+
+func (r ClassRepository) GetAllClasses(ctx context.Context) ([]entities.Class, error) {
+	return []entities.Class{}, nil
 }

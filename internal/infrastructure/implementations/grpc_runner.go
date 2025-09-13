@@ -2,9 +2,8 @@ package implementations
 
 import (
 	"Runlet/internal/application/dto"
-	"Runlet/internal/config"
 	"Runlet/internal/domain/entities"
-	"Runlet/internal/domain/interfaces"
+	"Runlet/internal/infrastructure/config"
 	grpc_interfaces "Runlet/internal/infrastructure/proto"
 	"context"
 	"encoding/json"
@@ -17,7 +16,7 @@ import (
 
 // newGRPCClient creates connection with runner container according to provided lang, creates and returns gRPC client
 func newGRPCClient(lang string) (grpc_interfaces.RunnerClient, error) {
-	runnerUrl, ok := config.Runners[lang]
+	runnerUrl, ok := config.RunnersConfig.ConnectionURLS[lang]
 	if !ok {
 		return nil, fmt.Errorf("runner for lang %s did not registered", lang)
 	}
@@ -29,9 +28,7 @@ func newGRPCClient(lang string) (grpc_interfaces.RunnerClient, error) {
 }
 
 // GRPCRunner is implementaion of a wrapper for the proto generated grpc_interfaces.RunnerClient
-type GRPCRunner struct {
-	interfaces.Runner
-}
+type GRPCRunner struct{}
 
 func NewGRPCRunner() *GRPCRunner {
 	return &GRPCRunner{}

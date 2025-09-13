@@ -1,16 +1,14 @@
 package implementations
 
 import (
-	"Runlet/internal/config"
 	"Runlet/internal/domain/entities"
-	"Runlet/internal/domain/interfaces"
+	"Runlet/internal/infrastructure/config"
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
 )
 
 type StudentRepository struct {
-	interfaces.StudentRepository
 	db *goqu.Database
 }
 

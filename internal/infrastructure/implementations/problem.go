@@ -1,16 +1,14 @@
 package implementations
 
 import (
-	"Runlet/internal/config"
 	"Runlet/internal/domain/entities"
-	"Runlet/internal/domain/interfaces"
+	"Runlet/internal/infrastructure/config"
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
 )
 
 type ProblemRepository struct {
-	interfaces.ProblemRepository
 	db *goqu.Database
 }
 
@@ -56,10 +54,10 @@ func (r ProblemRepository) CreateProblem(ctx context.Context, title string, desc
 	return entities.Problem{}, nil
 }
 
-func (r ProblemRepository) UpdateCourseProblem(ctx context.Context, problemId int, title string, description string) error {
+func (r ProblemRepository) UpdateProblem(ctx context.Context, problemId int, title string, description string) error {
 	return nil
 }
 
-func (r ProblemRepository) DeleteCourseProblem(ctx context.Context, problemId int) error {
+func (r ProblemRepository) DeleteProblem(ctx context.Context, problemId int) error {
 	return nil
 }

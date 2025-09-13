@@ -1,16 +1,14 @@
 package implementations
 
 import (
-	"Runlet/internal/config"
 	"Runlet/internal/domain/entities"
-	"Runlet/internal/domain/interfaces"
+	"Runlet/internal/infrastructure/config"
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
 )
 
 type CourseRepository struct {
-	interfaces.CourseRepository
 	db *goqu.Database
 }
 
@@ -67,6 +65,10 @@ func (r *CourseRepository) DeleteCourse(ctx context.Context, id int) error {
 
 func (r *CourseRepository) AddClasses(ctx context.Context, courseId int, classesIds []int) ([]entities.Class, error) {
 	return make([]entities.Class, 0), nil
+}
+
+func (r *CourseRepository) DeleteClasses(ctx context.Context, courseId int, classesIds []int) ([]entities.Class, error) {
+	return []entities.Class{}, nil
 }
 
 func (r *CourseRepository) ExcludeStudents(ctx context.Context, courseId int, classesIds []int) ([]entities.Class, error) {

@@ -4,7 +4,7 @@ import (
 	"Runlet/internal/application/dto"
 	"Runlet/internal/application/service"
 	"Runlet/internal/domain/entities"
-	"Runlet/tests/fixtures/mocks"
+	"Runlet/tests/unit/mocks"
 	"bytes"
 	"context"
 	"errors"

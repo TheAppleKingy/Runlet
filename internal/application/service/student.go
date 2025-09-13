@@ -78,6 +78,9 @@ func (s StudentService) SendCodeSolution(ctx context.Context, studentId int, pro
 		return
 	}
 
+	if len(results) == 0 {
+		return
+	}
 	testsPassed := true
 	for _, caseRes := range results {
 		if caseRes.Output != testCasesMap[caseRes.TestNum].Output {

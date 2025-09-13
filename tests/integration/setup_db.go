@@ -1,17 +1,25 @@
-package fixtures
+package integration
 
 import (
-	"Runlet/internal/config"
 	"Runlet/internal/domain/entities"
+	"Runlet/internal/infrastructure/config"
 	"Runlet/internal/infrastructure/security"
+	"database/sql"
 	"log/slog"
 	"os"
+	"sync"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exec"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
 )
 
-func SetUpDb(db *goqu.Database) {
+var DB *goqu.Database
+
+func setUpDb(db *goqu.Database) {
 	hsh, _ := security.HashPassword("test_password")
 	executors := []exec.QueryExecutor{
 		db.Insert(config.Tables.Class).Rows(goqu.Record{
@@ -75,4 +83,34 @@ func SetUpDb(db *goqu.Database) {
 			os.Exit(1)
 		}
 	}
+}
+
+var once sync.Once
+
+func init() {
+	once.Do(func() {
+		testDbUrl := "postgres://test_user:test_password@test_database:5432/test_database?sslmode=disable"
+		cli, err := sql.Open("postgres", testDbUrl)
+		if err != nil {
+			slog.Error(err.Error())
+			os.Exit(1)
+		}
+
+		DB = goqu.New("postgres", cli)
+		mg, err := migrate.New("file://../../../migration_files", testDbUrl)
+		if err != nil {
+			slog.Error(err.Error())
+			os.Exit(1)
+		}
+		slog.Info("Start apply migrations to test database")
+		if err := mg.Up(); err != nil && err != migrate.ErrNoChange {
+			slog.Error(err.Error())
+			os.Exit(1)
+		}
+		slog.Info("Migrations applied\n\n")
+
+		slog.Info("Start setup test database")
+		setUpDb(DB)
+		slog.Info("Database setup\n\n")
+	})
 }

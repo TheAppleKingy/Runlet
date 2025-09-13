@@ -3,6 +3,7 @@ package http
 import (
 	"Runlet/internal/application/dto"
 	"Runlet/internal/infrastructure/security/token"
+	"Runlet/tests/integration"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -28,7 +29,6 @@ func TestStudentLoginOk(t *testing.T) {
 	expected, _ := json.Marshal(map[string]string{"detail": "logged in"})
 	recieved, _ := io.ReadAll(resp.Body)
 	cookies := resp.Cookies()
-	assert.Equal(t, len(cookies), 1)
 	assert.Equal(t, len(cookies), 1)
 	assert.Equal(t, cookies[0].Name, "token")
 	assert.True(t, cookies[0].MaxAge > 0)
@@ -116,7 +116,7 @@ func TestStudentLoginNoSecret(t *testing.T) {
 
 func TestStudentRegistrationOk(t *testing.T) {
 	t.Cleanup(func() {
-		db.Exec("delete from students where email = $1", "new@mail")
+		integration.DB.Exec("delete from students where email = $1", "new@mail")
 	})
 	body, _ := json.Marshal(dto.StudentRegistration{
 		Name:     "new_name",
@@ -300,7 +300,7 @@ func TestTeacherLoginNoSecret(t *testing.T) {
 
 func TestTeacherRegistrationOk(t *testing.T) {
 	t.Cleanup(func() {
-		db.Exec("delete from students where email = $1", "new@mail")
+		integration.DB.Exec("delete from students where email = $1", "new@mail")
 	})
 	body, _ := json.Marshal(dto.TeacherRegistration{
 		Name:     "new_name",

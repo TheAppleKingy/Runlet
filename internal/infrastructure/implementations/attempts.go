@@ -1,9 +1,8 @@
 package implementations
 
 import (
-	"Runlet/internal/config"
 	"Runlet/internal/domain/entities"
-	"Runlet/internal/domain/interfaces"
+	"Runlet/internal/infrastructure/config"
 	"context"
 	"fmt"
 
@@ -11,7 +10,6 @@ import (
 )
 
 type AttemptRepository struct {
-	interfaces.AttemptRepository
 	db *goqu.Database
 }
 

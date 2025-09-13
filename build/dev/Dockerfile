@@ -16,6 +16,9 @@ FROM scratch
 WORKDIR /app
 
 COPY --from=builder /app/app .
+COPY --from=builder /app/runners.yaml .
+
+ENV RUNNERS_CONF_PATH=/app/runners.yaml
 
 EXPOSE 8081
 

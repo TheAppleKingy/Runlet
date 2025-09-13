@@ -2,7 +2,7 @@ package main
 
 import (
 	"Runlet/internal/application/service"
-	"Runlet/internal/config"
+	"Runlet/internal/infrastructure/config"
 	"Runlet/internal/infrastructure/implementations"
 	"Runlet/internal/interfaces/http/handlers"
 	"database/sql"
@@ -25,12 +25,9 @@ import (
 // @host localhost:8081
 // @BasePath /
 func main() {
-	dbUrl, err := config.GetDBUrl()
-	if err != nil {
-		slog.Error("cannot to get db url", "error", err)
-		os.Exit(1)
-	}
-	dbClient, err := sql.Open("postgres", dbUrl)
+	config.LoadConfigs()
+
+	dbClient, err := sql.Open("postgres", config.DBConfig.URL)
 	if err != nil {
 		slog.Error("error database connection", "error", err)
 		os.Exit(1)
