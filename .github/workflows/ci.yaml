@@ -32,4 +32,4 @@ jobs:
           go-version: ${{ matrix.go-version }}
                 
       - name: Test
-        run: make runlet.test.integration
+        run: make runlet.test.full
