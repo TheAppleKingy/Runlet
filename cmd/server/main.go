@@ -2,10 +2,10 @@ package main
 
 import (
 	"Runlet/internal/application/service"
-	"Runlet/internal/infrastructure/repositoryimpl"
+	"Runlet/internal/infrastructure/config"
+	"Runlet/internal/infrastructure/implementations"
 	"Runlet/internal/interfaces/http/handlers"
 	"database/sql"
-	"fmt"
 	"log/slog"
 	"os"
 	"strconv"
@@ -25,15 +25,9 @@ import (
 // @host localhost:8081
 // @BasePath /
 func main() {
-	dbName := os.Getenv("POSTGRES_DB")
-	dbUser := os.Getenv("POSTGRES_USER")
-	dbPassword := os.Getenv("POSTGRES_PASSWORD")
-	if dbName == "" || dbUser == "" || dbPassword == "" {
-		slog.Error("No db connection params in env")
-		os.Exit(1)
-	}
-	dbUrl := fmt.Sprintf("postgres://%s:%s@database:5432/%s?sslmode=disable", dbUser, dbPassword, dbName)
-	dbClient, err := sql.Open("postgres", dbUrl)
+	config.LoadConfigs()
+
+	dbClient, err := sql.Open("postgres", config.DBConfig.URL)
 	if err != nil {
 		slog.Error("error database connection", "error", err)
 		os.Exit(1)
@@ -48,14 +42,16 @@ func main() {
 
 	apiRouter := router.Group("/api")
 
-	classRepository := repositoryimpl.NewClassRepository(db)
-	courseRepository := repositoryimpl.NewCourseRepository(db)
-	studentRepository := repositoryimpl.NewStudentRepository(db)
-	teacherRepository := repositoryimpl.NewTeacherRepository(db)
-	problemRepository := repositoryimpl.NewProblemRepository(db)
-	attemptRepository := repositoryimpl.NewAttemptRepository(db)
+	classRepository := implementations.NewClassRepository(db)
+	courseRepository := implementations.NewCourseRepository(db)
+	studentRepository := implementations.NewStudentRepository(db)
+	teacherRepository := implementations.NewTeacherRepository(db)
+	problemRepository := implementations.NewProblemRepository(db)
+	attemptRepository := implementations.NewAttemptRepository(db)
 
-	studentService := service.NewStudentService(courseRepository, problemRepository, attemptRepository)
+	codeRunner := implementations.NewGRPCRunner()
+
+	studentService := service.NewStudentService(courseRepository, problemRepository, attemptRepository, codeRunner)
 	authService := service.NewAuthService(studentRepository, teacherRepository, classRepository)
 
 	handlers.ConnectAuthHandler(apiRouter, authService)

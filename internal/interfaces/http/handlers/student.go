@@ -70,7 +70,7 @@ func (h StudentHandler) GetMyProblems(ctx *gin.Context) {
 	}
 	problems, err := h.StudentService.GetStudentProblems(ctx.Request.Context(), studentId, courseId)
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, problems)

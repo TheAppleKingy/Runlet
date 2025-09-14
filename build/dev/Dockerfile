@@ -11,11 +11,15 @@ COPY . .
 RUN swag init -g ./cmd/server/main.go    
 RUN CGO_ENABLED=0 GOOS=linux go build -o app ./cmd/server
 
-FROM alpine:latest
+FROM scratch
 
 WORKDIR /app
 
 COPY --from=builder /app/app .
+COPY --from=builder /app/runners.yaml .
 
+ENV RUNNERS_CONF_PATH=/app/runners.yaml
 
 EXPOSE 8081
+
+ENTRYPOINT [ "/app/app" ]

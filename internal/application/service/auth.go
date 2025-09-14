@@ -2,7 +2,7 @@ package service
 
 import (
 	"Runlet/internal/application/dto"
-	"Runlet/internal/domain/repository"
+	"Runlet/internal/domain/interfaces"
 	"Runlet/internal/infrastructure/security"
 	"Runlet/internal/infrastructure/security/token"
 	"context"
@@ -10,12 +10,12 @@ import (
 )
 
 type AuthService struct {
-	StudentRepository repository.StudentRepositoryInterface
-	TeacherRepository repository.TeacherRepositoryInterface
-	ClassRepository   repository.ClassRepositoryInterface
+	StudentRepository interfaces.StudentRepository
+	TeacherRepository interfaces.TeacherRepository
+	ClassRepository   interfaces.ClassRepository
 }
 
-func NewAuthService(studentRepo repository.StudentRepositoryInterface, teacherRepo repository.TeacherRepositoryInterface, classRepo repository.ClassRepositoryInterface) *AuthService {
+func NewAuthService(studentRepo interfaces.StudentRepository, teacherRepo interfaces.TeacherRepository, classRepo interfaces.ClassRepository) *AuthService {
 	return &AuthService{
 		StudentRepository: studentRepo,
 		TeacherRepository: teacherRepo,

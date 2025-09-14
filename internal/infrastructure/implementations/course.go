@@ -1,16 +1,14 @@
-package repositoryimpl
+package implementations
 
 import (
 	"Runlet/internal/domain/entities"
-	"Runlet/internal/domain/repository"
-	textdata "Runlet/internal/infrastructure/text_data"
+	"Runlet/internal/infrastructure/config"
 	"context"
 
 	"github.com/doug-martin/goqu/v9"
 )
 
 type CourseRepository struct {
-	repository.CourseRepositoryInterface
 	db *goqu.Database
 }
 
@@ -22,7 +20,7 @@ func NewCourseRepository(db *goqu.Database) *CourseRepository {
 
 func (r *CourseRepository) GetCourseById(ctx context.Context, id int) (entities.Course, error) {
 	var course entities.Course
-	found, err := r.db.From(textdata.CourseTable).Select().Where(goqu.Ex{"id": id}).ScanStructContext(ctx, &course)
+	found, err := r.db.From(config.Tables.Course).Select().Where(goqu.Ex{"id": id}).ScanStructContext(ctx, &course)
 	if err != nil || !found {
 		return entities.Course{}, err
 	}
@@ -31,7 +29,7 @@ func (r *CourseRepository) GetCourseById(ctx context.Context, id int) (entities.
 
 func (r *CourseRepository) GetAllCourses(ctx context.Context) ([]entities.Course, error) {
 	var courses []entities.Course
-	if err := r.db.From(textdata.CourseTable).Select().ScanStructsContext(ctx, &courses); err != nil {
+	if err := r.db.From(config.Tables.Course).Select().ScanStructsContext(ctx, &courses); err != nil {
 		return []entities.Course{}, err
 	}
 	return courses, nil
@@ -39,16 +37,16 @@ func (r *CourseRepository) GetAllCourses(ctx context.Context) ([]entities.Course
 
 func (r *CourseRepository) GetAllStudentCourses(ctx context.Context, studentId int) ([]entities.Course, error) {
 	var courses []entities.Course
-	if err := r.db.From(goqu.T(textdata.CourseTable).As("c")).Select(goqu.I("c.*")).
+	if err := r.db.From(goqu.T(config.Tables.Course).As("c")).Select(goqu.I("c.*")).
 		Join(
-			goqu.T("classes_courses").As("cc"),
+			goqu.T(config.Tables.ClassesCourses).As("cc"),
 			goqu.On(goqu.I("c.id").Eq(goqu.I("cc.course_id"))),
 		).Join(
-		goqu.T(textdata.ClassTable).As("cls"),
+		goqu.T(config.Tables.Class).As("cls"),
 		goqu.On(goqu.I("cls.id").Eq(goqu.I("cc.class_id"))),
 	).
 		Join(
-			goqu.T(textdata.StudentTable).As("s"),
+			goqu.T(config.Tables.Student).As("s"),
 			goqu.On(goqu.I("s.class_id").Eq(goqu.I("cls.id"))),
 		).
 		Where(goqu.I("s.id").Eq(studentId)).ScanStructsContext(ctx, &courses); err != nil || len(courses) == 0 {
@@ -69,6 +67,21 @@ func (r *CourseRepository) AddClasses(ctx context.Context, courseId int, classes
 	return make([]entities.Class, 0), nil
 }
 
+func (r *CourseRepository) DeleteClasses(ctx context.Context, courseId int, classesIds []int) ([]entities.Class, error) {
+	return []entities.Class{}, nil
+}
+
 func (r *CourseRepository) ExcludeStudents(ctx context.Context, courseId int, classesIds []int) ([]entities.Class, error) {
 	return make([]entities.Class, 0), nil
+}
+
+func (r *CourseRepository) CheckStudent(ctx context.Context, studentId int, courseId int) bool {
+	var student int
+	found, _ := r.db.From(goqu.T(config.Tables.Student).As("s")).Select(goqu.I("s.id")).
+		Join(
+			goqu.T(config.Tables.ClassesCourses).As("cc"),
+			goqu.On(goqu.I("cc.class_id").Eq(goqu.I("s.class_id"))),
+		).
+		Where(goqu.I("s.id").Eq(studentId), goqu.I("cc.course_id").Eq(courseId)).ScanValContext(ctx, &student)
+	return found
 }
