@@ -8,4 +8,6 @@ RUN go mod download
 
 COPY . .
 
+ENV RUNNERS_CONF_PATH=/app/runners.yaml
+
 EXPOSE 8082
