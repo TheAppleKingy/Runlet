@@ -379,7 +379,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "is_student",
                 "password"
             ],
             "properties": {

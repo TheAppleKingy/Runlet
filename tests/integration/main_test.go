@@ -1,10 +1,9 @@
-package tests
+package integration
 
 import (
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -17,9 +16,6 @@ import (
 
 var MainURL string
 
-// db is for access the database in tests. it need for deleting rows created/updated in the relevants tests
-var db *goqu.Database
-
 func TestMain(m *testing.M) {
 	testDbUrl := "postgres://test_user:test_password@test_database:5432/test_database?sslmode=disable"
 	cli, err := sql.Open("postgres", testDbUrl)
@@ -27,10 +23,9 @@ func TestMain(m *testing.M) {
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
-	defer cli.Close()
 
-	db = goqu.New("postgres", cli)
-	mg, err := migrate.New("file://../migration_files", testDbUrl)
+	DB = goqu.New("postgres", cli)
+	mg, err := migrate.New("file://../../migration_files", testDbUrl)
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)
@@ -43,25 +38,21 @@ func TestMain(m *testing.M) {
 	slog.Info("Migrations applied\n\n")
 
 	slog.Info("Start setup test database")
-	setUpDb(db)
+	setUpDb(DB)
 	slog.Info("Database setup\n\n")
 
 	slog.Info("Start test server\n\n")
-	server := httptest.NewServer(getTestServer(db))
+	server := getTestHTTPServer(DB)
 	defer server.Close()
-
 	MainURL = server.URL + "/test"
+
 	slog.Info("Test server runned", "MainURL", MainURL)
 	fmt.Print("\n")
 
-	slog.Info("Start tests\n\n")
+	slog.Info("Starting integration tests\n\n")
 	code := m.Run()
 	fmt.Print("\n")
-	slog.Info("Tests finished\n\n")
-
-	slog.Info("Start dropping migrations in test database")
-	mg.Drop()
-	slog.Info("Migrations dropped\n\n")
+	slog.Info("Integration tests finished\n\n")
 
 	os.Exit(code)
 }

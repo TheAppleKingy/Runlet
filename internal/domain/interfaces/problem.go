@@ -1,11 +1,11 @@
-package repository
+package interfaces
 
 import (
 	"Runlet/internal/domain/entities"
 	"context"
 )
 
-type ProblemRepositoryInterface interface {
+type ProblemRepository interface {
 	GetProblem(ctx context.Context, id int) (entities.Problem, error)
 	GetProblemTestCases(ctx context.Context, problemId int) (entities.TestCases, error)
 	GetCourseProblems(ctx context.Context, courseId int) ([]entities.Problem, error)

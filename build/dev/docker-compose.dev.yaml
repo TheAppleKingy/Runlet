@@ -9,7 +9,6 @@ services:
       - "8081:8080"
     depends_on:
       - database
-    command: sh -c "/app/app"
     networks:
       - runlet_network
       - backend_local

@@ -4,7 +4,7 @@
 // 	protoc        v6.31.1
 // source: internal/infrastructure/proto/runner.proto
 
-package runner
+package grpc_interfaces
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -145,7 +145,7 @@ var File_internal_infrastructure_proto_runner_proto protoreflect.FileDescriptor
 
 const file_internal_infrastructure_proto_runner_proto_rawDesc = "" +
 	"\n" +
-	"*internal/infrastructure/proto/runner.proto\x12\x06runner\"\x82\x01\n" +
+	"*internal/infrastructure/proto/runner.proto\x12\x0fgrpc_interfaces\"\x82\x01\n" +
 	"\x0eRunCodeRequest\x12\x18\n" +
 	"\astudent\x18\x01 \x01(\x05R\astudent\x12\x18\n" +
 	"\aproblem\x18\x02 \x01(\x05R\aproblem\x12\x12\n" +
@@ -153,10 +153,9 @@ const file_internal_infrastructure_proto_runner_proto_rawDesc = "" +
 	"\x04lang\x18\x04 \x01(\tR\x04lang\x12\x14\n" +
 	"\x05cases\x18\x05 \x01(\fR\x05cases\"+\n" +
 	"\x0fRunCodeResponse\x12\x18\n" +
-	"\aresults\x18\x01 \x01(\fR\aresults2D\n" +
-	"\x06Runner\x12:\n" +
-	"\aRunCode\x12\x16.runner.RunCodeRequest\x1a\x17.runner.RunCodeResponseB\n" +
-	"Z\b.;runnerb\x06proto3"
+	"\aresults\x18\x01 \x01(\fR\aresults2V\n" +
+	"\x06Runner\x12L\n" +
+	"\aRunCode\x12\x1f.grpc_interfaces.RunCodeRequest\x1a .grpc_interfaces.RunCodeResponseB\x13Z\x11.;grpc_interfacesb\x06proto3"
 
 var (
 	file_internal_infrastructure_proto_runner_proto_rawDescOnce sync.Once
@@ -172,12 +171,12 @@ func file_internal_infrastructure_proto_runner_proto_rawDescGZIP() []byte {
 
 var file_internal_infrastructure_proto_runner_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_internal_infrastructure_proto_runner_proto_goTypes = []any{
-	(*RunCodeRequest)(nil),  // 0: runner.RunCodeRequest
-	(*RunCodeResponse)(nil), // 1: runner.RunCodeResponse
+	(*RunCodeRequest)(nil),  // 0: grpc_interfaces.RunCodeRequest
+	(*RunCodeResponse)(nil), // 1: grpc_interfaces.RunCodeResponse
 }
 var file_internal_infrastructure_proto_runner_proto_depIdxs = []int32{
-	0, // 0: runner.Runner.RunCode:input_type -> runner.RunCodeRequest
-	1, // 1: runner.Runner.RunCode:output_type -> runner.RunCodeResponse
+	0, // 0: grpc_interfaces.Runner.RunCode:input_type -> grpc_interfaces.RunCodeRequest
+	1, // 1: grpc_interfaces.Runner.RunCode:output_type -> grpc_interfaces.RunCodeResponse
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
