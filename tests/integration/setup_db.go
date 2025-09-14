@@ -4,14 +4,11 @@ import (
 	"Runlet/internal/domain/entities"
 	"Runlet/internal/infrastructure/config"
 	"Runlet/internal/infrastructure/security"
-	"database/sql"
 	"log/slog"
 	"os"
-	"sync"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exec"
-	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
@@ -33,10 +30,16 @@ func setUpDb(db *goqu.Database) {
 			"class_id": 1,
 		}).Executor(),
 
-		db.Insert(config.Tables.Course).Rows(goqu.Record{
-			"title":       "test_course",
-			"description": "test_description",
-		}).Executor(),
+		db.Insert(config.Tables.Course).Rows(
+			goqu.Record{
+				"title":       "test_course",
+				"description": "test_description",
+			},
+			goqu.Record{
+				"title":       "test_course2",
+				"description": "test_descr2",
+			},
+		).Executor(),
 
 		db.Insert(config.Tables.Teacher).Rows(
 			goqu.Record{
@@ -53,27 +56,61 @@ func setUpDb(db *goqu.Database) {
 			},
 		).Executor(),
 
-		db.Insert(config.Tables.Problem).Rows(goqu.Record{
-			"title":       "test_problem",
-			"description": "test_pr_descr",
-			"course_id":   1,
-			"test_cases": entities.TestCases{
-				entities.TestCase{
-					TestNum: 1,
-					Input:   "2",
-					Output:  "2",
+		db.Insert(config.Tables.Problem).Rows(
+			goqu.Record{
+				"title":       "test_problem",
+				"description": "test_pr_descr",
+				"course_id":   1,
+				"test_cases": entities.TestCases{
+					entities.TestCase{
+						TestNum: 1,
+						Input:   "2",
+						Output:  "2",
+					},
 				},
 			},
-		}).Executor(),
+			goqu.Record{
+				"title":       "test_problem2",
+				"description": "test_pr_descr2",
+				"course_id":   2,
+				"test_cases": entities.TestCases{
+					entities.TestCase{
+						TestNum: 1,
+						Input:   "3",
+						Output:  "3",
+					},
+				},
+			},
+			goqu.Record{
+				"title":       "test_problem3",
+				"description": "test_pr_descr3",
+				"course_id":   1,
+				"test_cases": entities.TestCases{
+					entities.TestCase{
+						TestNum: 1,
+						Input:   "4",
+						Output:  "4",
+					},
+				},
+			},
+		).Executor(),
 
-		db.Insert("classes_courses").Rows(goqu.Record{
+		db.Insert(config.Tables.ClassesCourses).Rows(goqu.Record{
 			"class_id":  1,
 			"course_id": 1,
 		}).Executor(),
 
-		db.Insert("teachers_classes").Rows(goqu.Record{
+		db.Insert(config.Tables.TeachersClasses).Rows(goqu.Record{
 			"teacher_id": 1,
 			"class_id":   1,
+		}).Executor(),
+
+		db.Insert(config.Tables.Attempt).Rows(goqu.Record{
+			"student_id": 1,
+			"problem_id": 1,
+			"amount":     1,
+			"done":       true,
+			"test_cases": []byte("[]"),
 		}).Executor(),
 	}
 	for idx, executor := range executors {
@@ -83,34 +120,4 @@ func setUpDb(db *goqu.Database) {
 			os.Exit(1)
 		}
 	}
-}
-
-var once sync.Once
-
-func init() {
-	once.Do(func() {
-		testDbUrl := "postgres://test_user:test_password@test_database:5432/test_database?sslmode=disable"
-		cli, err := sql.Open("postgres", testDbUrl)
-		if err != nil {
-			slog.Error(err.Error())
-			os.Exit(1)
-		}
-
-		DB = goqu.New("postgres", cli)
-		mg, err := migrate.New("file://../../../migration_files", testDbUrl)
-		if err != nil {
-			slog.Error(err.Error())
-			os.Exit(1)
-		}
-		slog.Info("Start apply migrations to test database")
-		if err := mg.Up(); err != nil && err != migrate.ErrNoChange {
-			slog.Error(err.Error())
-			os.Exit(1)
-		}
-		slog.Info("Migrations applied\n\n")
-
-		slog.Info("Start setup test database")
-		setUpDb(DB)
-		slog.Info("Database setup\n\n")
-	})
 }

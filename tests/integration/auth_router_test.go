@@ -1,9 +1,8 @@
-package http
+package integration
 
 import (
 	"Runlet/internal/application/dto"
 	"Runlet/internal/infrastructure/security/token"
-	"Runlet/tests/integration"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -116,7 +115,7 @@ func TestStudentLoginNoSecret(t *testing.T) {
 
 func TestStudentRegistrationOk(t *testing.T) {
 	t.Cleanup(func() {
-		integration.DB.Exec("delete from students where email = $1", "new@mail")
+		DB.Exec("delete from students where email = $1", "new@mail")
 	})
 	body, _ := json.Marshal(dto.StudentRegistration{
 		Name:     "new_name",
@@ -300,7 +299,7 @@ func TestTeacherLoginNoSecret(t *testing.T) {
 
 func TestTeacherRegistrationOk(t *testing.T) {
 	t.Cleanup(func() {
-		integration.DB.Exec("delete from students where email = $1", "new@mail")
+		DB.Exec("delete from students where email = $1", "new@mail")
 	})
 	body, _ := json.Marshal(dto.TeacherRegistration{
 		Name:     "new_name",

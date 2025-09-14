@@ -1,4 +1,4 @@
-package http
+package integration
 
 import (
 	"Runlet/internal/application/service"
@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetTestHTTPServer(db *goqu.Database) *httptest.Server {
+func getTestHTTPServer(db *goqu.Database) *httptest.Server {
 	studentRepo := implementations.NewStudentRepository(db)
 	classRepo := implementations.NewClassRepository(db)
 	courseRepo := implementations.NewCourseRepository(db)
