@@ -36,7 +36,8 @@ func ConnectStudentHandler(parentRouter *gin.RouterGroup, authService *service.A
 // @Accept  json
 // @Produce  json
 // @Success 200 {array} dto.CourseForStudent "Example of course data"
-// @Failure 400 {object} map[string]string
+// @Failure 400 {object} dto.ErrorBody
+// @Failure 500 {string} string "Internal error"
 // @Router /api/student/courses/ [get]
 func (h StudentHandler) GetMyCourses(ctx *gin.Context) {
 	studentId := ctx.GetInt("student_id")
@@ -58,8 +59,8 @@ func (h StudentHandler) GetMyCourses(ctx *gin.Context) {
 // @Produce  json
 // @Param course_id path int true "Course ID"
 // @Success 200 {array} entities.Problem "Example of problem data"
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorBody
+// @Failure 500 {string} string "Internal error"
 // @Router /api/student/courses/{course_id}/problems [get]
 func (h StudentHandler) GetMyProblems(ctx *gin.Context) {
 	studentId := ctx.GetInt("student_id")
@@ -85,8 +86,8 @@ func (h StudentHandler) GetMyProblems(ctx *gin.Context) {
 // @Param problem_id path int true "Problem ID"
 // @Param sendCodeData body dto.CodeSolution true "Data for sending code solution"
 // @Success 200 {array} entities.Problem "Example of response"
-// @Failure 400 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorBody
+// @Failure 500 {string} string "Internal error"
 // @Router /api/student/problems/{problem_id}/send_solution [post]
 func (h StudentHandler) SendSolution(ctx *gin.Context) {
 	studentId := ctx.GetInt("student_id")
