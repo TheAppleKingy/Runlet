@@ -3,10 +3,9 @@ package handlers
 import (
 	"Runlet/internal/application/dto"
 	"Runlet/internal/application/service"
+	"Runlet/internal/infrastructure/config"
 	"errors"
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -62,13 +61,7 @@ func (h AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	cookieExpireSeconds, err := strconv.Atoi(os.Getenv("JWT_TOKEN_EXPIRE_TIME"))
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusConflict, gin.H{
-			"error": "undefined token expire time",
-		})
-		return
-	}
+	cookieExpireSeconds := config.AuthConfig.TokenExpireTime
 	ctx.SetCookie(
 		"token",
 		token,

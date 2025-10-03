@@ -6,6 +6,12 @@ services:
     environment:
       - SECRET_KEY=value
       - JWT_TOKEN_EXPIRE_TIME=2222
+      - POSTGRES_DB=test_database
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_password
+      - RUNNERS_CONF_PATH=/app/build/test/test-runners.yaml
+      - DEBUG=false
+
     volumes:
       - ../../:/app
 

@@ -2,12 +2,14 @@ package integration
 
 import (
 	"Runlet/internal/application/dto"
+	"Runlet/internal/application/service"
 	"Runlet/internal/infrastructure/security/token"
+	"Runlet/internal/pkg/errs"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,12 +49,12 @@ func TestStudentLoginNotExists(t *testing.T) {
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
 	assert.NoError(t, err)
 	defer resp.Body.Close()
-	expected, err := json.Marshal(map[string]string{"error": "unable to found student: <nil>"})
+	expected, err := json.Marshal(map[string]string{"error": errs.ConcatErrors(service.ErrStudentNotFound, nil).Error()})
 	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
-	assert.Equal(t, string(recieved), string(expected))
+	assert.Equal(t, string(expected), string(recieved))
 }
 
 func TestStudentLoginWrongPass(t *testing.T) {
@@ -70,47 +72,7 @@ func TestStudentLoginWrongPass(t *testing.T) {
 	recieved, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
-	assert.Equal(t, string(recieved), string(expected))
-}
-
-func TestStudentLoginNoExpTime(t *testing.T) {
-	body, _ := json.Marshal(dto.Login{
-		Email:     "test@mail",
-		Password:  "test_password",
-		IsStudent: true,
-	})
-	expTime := os.Getenv("JWT_TOKEN_EXPIRE_TIME")
-	os.Unsetenv("JWT_TOKEN_EXPIRE_TIME")
-	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	os.Setenv("JWT_TOKEN_EXPIRE_TIME", expTime)
-	assert.NoError(t, err)
-	defer resp.Body.Close()
-	expected, err := json.Marshal(map[string]string{"error": "unable to create token: error getting token exp time: strconv.Atoi: parsing \"\": invalid syntax"})
-	assert.NoError(t, err)
-	recieved, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, resp.StatusCode, 400)
-	assert.Equal(t, string(recieved), string(expected))
-}
-
-func TestStudentLoginNoSecret(t *testing.T) {
-	body, _ := json.Marshal(dto.Login{
-		Email:     "test@mail",
-		Password:  "test_password",
-		IsStudent: true,
-	})
-	sKey := os.Getenv("SECRET_KEY")
-	os.Unsetenv("SECRET_KEY")
-	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	os.Setenv("SECRET_KEY", sKey)
-	assert.NoError(t, err)
-	defer resp.Body.Close()
-	expected, err := json.Marshal(map[string]string{"error": "unable to create token: no sign key"})
-	assert.NoError(t, err)
-	recieved, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, resp.StatusCode, 400)
-	assert.Equal(t, string(recieved), string(expected))
+	assert.Equal(t, string(expected), string(recieved))
 }
 
 func TestStudentRegistrationOk(t *testing.T) {
@@ -144,7 +106,7 @@ func TestStudentRegistrationEmailAlreadyExists(t *testing.T) {
 	resp, err := http.Post(MainURL+"/auth/registration_student", contentType, bytes.NewBuffer(body))
 	assert.NoError(t, err)
 	defer resp.Body.Close()
-	expected, _ := json.Marshal(map[string]string{"error": "unable to create student: pq: duplicate key value violates unique constraint \"students_email_key\""})
+	expected, _ := json.Marshal(map[string]string{"error": errs.ConcatErrors(service.ErrRegisterStudent, errors.New("pq: duplicate key value violates unique constraint \"students_email_key\"")).Error()})
 	recieved, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(expected), string(recieved))
@@ -161,7 +123,7 @@ func TestStudentRegistrationNoClassExists(t *testing.T) {
 	resp, err := http.Post(MainURL+"/auth/registration_student", contentType, bytes.NewBuffer(body))
 	assert.NoError(t, err)
 	defer resp.Body.Close()
-	expected, _ := json.Marshal(map[string]string{"error": "unable to found student class: <nil>"})
+	expected, _ := json.Marshal(map[string]string{"error": errs.ConcatErrors(service.ErrClassNotFound, nil).Error()})
 	recieved, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(expected), string(recieved))
@@ -178,7 +140,7 @@ func TestStudentRegistrationInvalidEmailFormat(t *testing.T) {
 	resp, err := http.Post(MainURL+"/auth/registration_student", contentType, bytes.NewBuffer(body))
 	assert.NoError(t, err)
 	defer resp.Body.Close()
-	expected, _ := json.Marshal(map[string]string{"error": "unable to create student: pq: value for domain email_type violates check constraint \"email_type_check\""})
+	expected, _ := json.Marshal(map[string]string{"error": errs.ConcatErrors(service.ErrRegisterStudent, errors.New("pq: value for domain email_type violates check constraint \"email_type_check\"")).Error()})
 	recieved, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(expected), string(recieved))
@@ -231,7 +193,7 @@ func TestTeacherLoginNotExists(t *testing.T) {
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
 	assert.NoError(t, err)
 	defer resp.Body.Close()
-	expected, err := json.Marshal(map[string]string{"error": "unable to found teacher: <nil>"})
+	expected, err := json.Marshal(map[string]string{"error": errs.ConcatErrors(service.ErrTeacherNotFound, nil).Error()})
 	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
@@ -249,47 +211,7 @@ func TestTeacherLoginWrongPass(t *testing.T) {
 	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
 	assert.NoError(t, err)
 	defer resp.Body.Close()
-	expected, err := json.Marshal(map[string]string{"error": "wrong password"})
-	assert.NoError(t, err)
-	recieved, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, resp.StatusCode, 400)
-	assert.Equal(t, string(recieved), string(expected))
-}
-
-func TestTeacherLoginNoExpTime(t *testing.T) {
-	body, _ := json.Marshal(dto.Login{
-		Email:     "test_t@mail",
-		Password:  "test_password",
-		IsStudent: false,
-	})
-	expTime := os.Getenv("JWT_TOKEN_EXPIRE_TIME")
-	os.Unsetenv("JWT_TOKEN_EXPIRE_TIME")
-	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	os.Setenv("JWT_TOKEN_EXPIRE_TIME", expTime)
-	assert.NoError(t, err)
-	defer resp.Body.Close()
-	expected, err := json.Marshal(map[string]string{"error": "unable to create token: error getting token exp time: strconv.Atoi: parsing \"\": invalid syntax"})
-	assert.NoError(t, err)
-	recieved, err := io.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, resp.StatusCode, 400)
-	assert.Equal(t, string(recieved), string(expected))
-}
-
-func TestTeacherLoginNoSecret(t *testing.T) {
-	body, _ := json.Marshal(dto.Login{
-		Email:     "test_t@mail",
-		Password:  "test_password",
-		IsStudent: false,
-	})
-	sKey := os.Getenv("SECRET_KEY")
-	os.Unsetenv("SECRET_KEY")
-	resp, err := http.Post(MainURL+"/auth/login", contentType, bytes.NewBuffer(body))
-	os.Setenv("SECRET_KEY", sKey)
-	assert.NoError(t, err)
-	defer resp.Body.Close()
-	expected, err := json.Marshal(map[string]string{"error": "unable to create token: no sign key"})
+	expected, err := json.Marshal(map[string]string{"error": service.ErrWrongPassword.Error()})
 	assert.NoError(t, err)
 	recieved, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err)
@@ -326,7 +248,7 @@ func TestTeacherRegistrationEmailAlreadyExists(t *testing.T) {
 	resp, err := http.Post(MainURL+"/auth/registration_teacher", contentType, bytes.NewBuffer(body))
 	assert.NoError(t, err)
 	defer resp.Body.Close()
-	expected, _ := json.Marshal(map[string]string{"error": "unable to create teacher: pq: duplicate key value violates unique constraint \"teachers_email_key\""})
+	expected, _ := json.Marshal(map[string]string{"error": errs.ConcatErrors(service.ErrRegisterTeacher, errors.New("pq: duplicate key value violates unique constraint \"teachers_email_key\"")).Error()})
 	recieved, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(expected), string(recieved))
@@ -342,7 +264,7 @@ func TestTeacherRegistrationInvalidEmailFormat(t *testing.T) {
 	resp, err := http.Post(MainURL+"/auth/registration_teacher", contentType, bytes.NewBuffer(body))
 	assert.NoError(t, err)
 	defer resp.Body.Close()
-	expected, _ := json.Marshal(map[string]string{"error": "unable to create teacher: pq: value for domain email_type violates check constraint \"email_type_check\""})
+	expected, _ := json.Marshal(map[string]string{"error": errs.ConcatErrors(service.ErrRegisterTeacher, errors.New("pq: value for domain email_type violates check constraint \"email_type_check\"")).Error()})
 	recieved, _ := io.ReadAll(resp.Body)
 	assert.Equal(t, resp.StatusCode, 400)
 	assert.Equal(t, string(expected), string(recieved))

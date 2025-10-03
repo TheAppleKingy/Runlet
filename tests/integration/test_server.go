@@ -2,15 +2,22 @@ package integration
 
 import (
 	"Runlet/internal/application/service"
+	"Runlet/internal/infrastructure/config"
 	"Runlet/internal/infrastructure/implementations"
 	"Runlet/internal/interfaces/http/handlers"
+	"log/slog"
 	"net/http/httptest"
+	"os"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/gin-gonic/gin"
 )
 
 func getTestHTTPServer(db *goqu.Database) *httptest.Server {
+	if err := config.LoadConfigs(); err != nil {
+		slog.Error("cannot load config data", "error", err)
+		os.Exit(1)
+	}
 	studentRepo := implementations.NewStudentRepository(db)
 	classRepo := implementations.NewClassRepository(db)
 	courseRepo := implementations.NewCourseRepository(db)
