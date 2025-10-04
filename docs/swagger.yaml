@@ -23,6 +23,12 @@ definitions:
       title:
         type: string
     type: object
+  dto.ErrorBody:
+    properties:
+      error:
+        example: error msg
+        type: string
+    type: object
   dto.Login:
     properties:
       email:
@@ -34,6 +40,12 @@ definitions:
     required:
     - email
     - password
+    type: object
+  dto.OkBody:
+    properties:
+      detail:
+        example: detail msg
+        type: string
     type: object
   dto.ProblemForCourse:
     properties:
@@ -71,120 +83,19 @@ definitions:
     - name
     - password
     type: object
-  entities.Attempt:
-    properties:
-      amount:
-        type: integer
-      done:
-        type: boolean
-      id:
-        type: integer
-      problem_id:
-        type: integer
-      student_id:
-        type: integer
-      test_cases:
-        items:
-          $ref: '#/definitions/entities.TestCase'
-        type: array
-    type: object
-  entities.Class:
-    properties:
-      courses:
-        items:
-          $ref: '#/definitions/entities.Course'
-        type: array
-      id:
-        type: integer
-      number:
-        type: string
-      students:
-        items:
-          $ref: '#/definitions/entities.Student'
-        type: array
-      teachers:
-        items:
-          $ref: '#/definitions/entities.Teacher'
-        type: array
-    type: object
-  entities.Course:
-    properties:
-      classes:
-        items:
-          $ref: '#/definitions/entities.Class'
-        type: array
-      description:
-        type: string
-      id:
-        type: integer
-      problems:
-        items:
-          $ref: '#/definitions/entities.Problem'
-        type: array
-      teachers:
-        items:
-          $ref: '#/definitions/entities.Teacher'
-        type: array
-      title:
-        type: string
-    type: object
   entities.Problem:
     properties:
-      attempts:
-        items:
-          $ref: '#/definitions/entities.Attempt'
-        type: array
       course_id:
         type: integer
       description:
         type: string
       id:
         type: integer
-      students:
-        items:
-          $ref: '#/definitions/entities.Student'
-        type: array
       test_cases:
         items:
           $ref: '#/definitions/entities.TestCase'
         type: array
       title:
-        type: string
-    type: object
-  entities.Student:
-    properties:
-      class_id:
-        type: integer
-      courses:
-        items:
-          $ref: '#/definitions/entities.Course'
-        type: array
-      email:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      password:
-        type: string
-    type: object
-  entities.Teacher:
-    properties:
-      classes:
-        items:
-          $ref: '#/definitions/entities.Class'
-        type: array
-      courses:
-        items:
-          $ref: '#/definitions/entities.Course'
-        type: array
-      email:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      password:
         type: string
     type: object
   entities.TestCase:
@@ -219,17 +130,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: logged in
+          description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.OkBody'
         "400":
-          description: logget out
+          description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorBody'
+        "500":
+          description: Internal error
+          schema:
+            type: string
       summary: Login
       tags:
       - auth
@@ -242,17 +153,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: logged out
+          description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
+            $ref: '#/definitions/dto.OkBody'
+        "400":
+          description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorBody'
+        "500":
+          description: Internal error
+          schema:
+            type: string
       summary: Logout
       tags:
       - auth
@@ -274,15 +185,15 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.OkBody'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorBody'
+        "500":
+          description: Internal error
+          schema:
+            type: string
       summary: StudentRegister
       tags:
       - auth
@@ -304,15 +215,15 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.OkBody'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorBody'
+        "500":
+          description: Internal error
+          schema:
+            type: string
       summary: TeacherRegister
       tags:
       - auth
@@ -333,9 +244,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorBody'
+        "500":
+          description: Internal error
+          schema:
+            type: string
       summary: GetMyCourses
       tags:
       - student/courses
@@ -362,15 +275,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorBody'
         "500":
-          description: Internal Server Error
+          description: Internal error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
       summary: GetMyProblems
       tags:
       - student/courses
@@ -403,15 +312,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.ErrorBody'
         "500":
-          description: Internal Server Error
+          description: Internal error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            type: string
       summary: SendSolution
       tags:
       - student/problems

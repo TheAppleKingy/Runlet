@@ -14,7 +14,7 @@ type TestCase struct {
 
 type TestCases []TestCase
 
-func (tc *TestCases) Scan(src interface{}) error {
+func (tc *TestCases) Scan(src any) error {
 	bytes, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("cannot decode test_case column of tests table. expected bytes, got %T", src)
