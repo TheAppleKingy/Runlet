@@ -6,7 +6,8 @@ import (
 )
 
 type dbConfig struct {
-	URL string
+	URL     string
+	TestURL string
 }
 
 func (cfg *dbConfig) parse() error {
@@ -23,7 +24,6 @@ func (cfg *dbConfig) parse() error {
 		return ErrNoEnvDbPassword
 	}
 	cfg.URL = fmt.Sprintf("postgres://%s:%s@database:5432/%s?sslmode=disable", dbUser, dbPassword, dbName)
+	cfg.TestURL = "postgres://test_user:test_password@test_database:5432/test_database?sslmode=disable"
 	return nil
 }
-
-var DBConfig = dbConfig{}

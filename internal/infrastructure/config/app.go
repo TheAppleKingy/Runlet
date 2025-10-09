@@ -21,5 +21,3 @@ func (conf *appConfig) parse() error {
 	conf.IsDebug = isDebug
 	return nil
 }
-
-var AppConfig = appConfig{}
