@@ -2,31 +2,28 @@ package config
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 )
 
 type dbConfig struct {
-	URL string
+	URL     string
+	TestURL string
 }
 
-func (cfg *dbConfig) parse() {
+func (cfg *dbConfig) parse() error {
 	dbName := os.Getenv("POSTGRES_DB")
 	dbUser := os.Getenv("POSTGRES_USER")
 	dbPassword := os.Getenv("POSTGRES_PASSWORD")
 	if dbName == "" {
-		slog.Error("no db name was set in env")
-		os.Exit(1)
+		return ErrNoEnvDbName
 	}
 	if dbUser == "" {
-		slog.Error("no db user was set in env")
-		os.Exit(1)
+		return ErrNoEnvUsername
 	}
 	if dbPassword == "" {
-		slog.Error("no db password was set in env")
-		os.Exit(1)
+		return ErrNoEnvDbPassword
 	}
 	cfg.URL = fmt.Sprintf("postgres://%s:%s@database:5432/%s?sslmode=disable", dbUser, dbPassword, dbName)
+	cfg.TestURL = "postgres://test_user:test_password@test_database:5432/test_database?sslmode=disable"
+	return nil
 }
-
-var DBConfig = dbConfig{}

@@ -3,10 +3,9 @@ package handlers
 import (
 	"Runlet/internal/application/dto"
 	"Runlet/internal/application/service"
+	"Runlet/internal/infrastructure/config"
 	"errors"
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,8 +33,9 @@ func ConnectAuthHandler(parentRouter *gin.RouterGroup, authService *service.Auth
 // @Accept  json
 // @Produce  json
 // @Param loginData body dto.Login true "Data for login"
-// @Success 200 {object} map[string]string "logged in"
-// @Failure 400 {object} map[string]string "logget out"
+// @Success 200 {object} dto.OkBody
+// @Failure 400 {object} dto.ErrorBody
+// @Failure 500 {string} string "Internal error"
 // @Router /api/auth/login [post]
 func (h AuthHandler) Login(ctx *gin.Context) {
 	var data dto.Login
@@ -61,13 +61,7 @@ func (h AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	cookieExpireSeconds, err := strconv.Atoi(os.Getenv("JWT_TOKEN_EXPIRE_TIME"))
-	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusConflict, gin.H{
-			"error": "undefined token expire time",
-		})
-		return
-	}
+	cookieExpireSeconds := config.AuthConfig.TokenExpireTime
 	ctx.SetCookie(
 		"token",
 		token,
@@ -88,8 +82,9 @@ func (h AuthHandler) Login(ctx *gin.Context) {
 // @Tags auth
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} map[string]string "logged out"
-// @Failure 401 {object} map[string]string
+// @Success 200 {object} dto.OkBody
+// @Failure 400 {object} dto.ErrorBody
+// @Failure 500 {string} string "Internal error"
 // @Router /api/auth/logout [post]
 func (h AuthHandler) Logout(ctx *gin.Context) {
 	ctx.SetCookie(
@@ -113,8 +108,9 @@ func (h AuthHandler) Logout(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param registrationData body dto.StudentRegistration true "Data for registration student"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
+// @Success 200 {object} dto.OkBody
+// @Failure 400 {object} dto.ErrorBody
+// @Failure 500 {string} string "Internal error"
 // @Router /api/auth/registration_student [post]
 func (h AuthHandler) RegisterStudent(ctx *gin.Context) {
 	var data dto.StudentRegistration
@@ -142,8 +138,9 @@ func (h AuthHandler) RegisterStudent(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param registrationData body dto.TeacherRegistration true "Data for registration teacher"
-// @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
+// @Success 200 {object} dto.OkBody
+// @Failure 400 {object} dto.ErrorBody
+// @Failure 500 {string} string "Internal error"
 // @Router /api/auth/registration_teacher [post]
 func (h AuthHandler) RegisterTeacher(ctx *gin.Context) {
 	var data dto.TeacherRegistration

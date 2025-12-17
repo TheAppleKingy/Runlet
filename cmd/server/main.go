@@ -8,7 +8,6 @@ import (
 	"database/sql"
 	"log/slog"
 	"os"
-	"strconv"
 
 	_ "Runlet/docs"
 
@@ -25,7 +24,10 @@ import (
 // @host localhost:8081
 // @BasePath /
 func main() {
-	config.LoadConfigs()
+	if err := config.LoadConfigs(); err != nil {
+		slog.Error("error loading data for configs", "error", err)
+		os.Exit(1)
+	}
 
 	dbClient, err := sql.Open("postgres", config.DBConfig.URL)
 	if err != nil {
@@ -36,7 +38,7 @@ func main() {
 	db := goqu.New("postgres", dbClient)
 
 	router := gin.Default()
-	if debug, _ := strconv.ParseBool(os.Getenv("DEBUG")); debug {
+	if config.AppConfig.IsDebug {
 		router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 

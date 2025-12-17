@@ -5,8 +5,8 @@ import (
 	"Runlet/internal/domain/interfaces"
 	"Runlet/internal/infrastructure/security"
 	"Runlet/internal/infrastructure/security/token"
+	"Runlet/internal/pkg/errs"
 	"context"
-	"fmt"
 )
 
 type AuthService struct {
@@ -26,14 +26,14 @@ func NewAuthService(studentRepo interfaces.StudentRepository, teacherRepo interf
 func (s AuthService) loginStudent(ctx context.Context, email string, password string) (string, error) {
 	student, err := s.StudentRepository.GetStudentByEmail(ctx, email)
 	if err != nil || student.ID == 0 {
-		return "", fmt.Errorf("unable to found student: %v", err)
+		return "", errs.ConcatErrors(ErrStudentNotFound, err)
 	}
 	if !security.CheckPassword(password, student.Password) {
-		return "", fmt.Errorf("wrong password")
+		return "", ErrWrongPassword
 	}
 	token, err := token.GetTokenForStudent(student.ID)
 	if err != nil {
-		return "", fmt.Errorf("unable to create token: %v", err)
+		return "", errs.ConcatErrors(ErrCreateToken, err)
 	}
 	return token, nil
 }
@@ -41,14 +41,14 @@ func (s AuthService) loginStudent(ctx context.Context, email string, password st
 func (s AuthService) loginTeacher(ctx context.Context, email string, password string) (string, error) {
 	teacher, err := s.TeacherRepository.GetTeacherByEmail(ctx, email)
 	if err != nil || teacher.ID == 0 {
-		return "", fmt.Errorf("unable to found teacher: %v", err)
+		return "", errs.ConcatErrors(ErrTeacherNotFound, err)
 	}
 	if !security.CheckPassword(password, teacher.Password) {
-		return "", fmt.Errorf("wrong password")
+		return "", ErrWrongPassword
 	}
 	token, err := token.GetTokenForTeacher(teacher.ID)
 	if err != nil {
-		return "", fmt.Errorf("unable to create token: %v", err)
+		return "", errs.ConcatErrors(ErrCreateToken, err)
 	}
 	return token, nil
 }
@@ -56,15 +56,15 @@ func (s AuthService) loginTeacher(ctx context.Context, email string, password st
 func (s AuthService) RegisterStudent(ctx context.Context, data dto.StudentRegistration) error {
 	hashedPas, err := security.HashPassword(data.Password)
 	if err != nil {
-		return fmt.Errorf("error processing password: %v", err)
+		return errs.ConcatErrors(ErrProcessingPassword, err)
 	}
 	class, err := s.ClassRepository.GetClass(ctx, data.ClassNum)
 	if err != nil || class.ID == 0 {
-		return fmt.Errorf("unable to found student class: %v", err)
+		return errs.ConcatErrors(ErrClassNotFound, err)
 	}
 	_, err = s.StudentRepository.CreateStudent(ctx, data.Name, data.Email, hashedPas, class.ID)
 	if err != nil {
-		return fmt.Errorf("unable to create student: %v", err)
+		return errs.ConcatErrors(ErrRegisterStudent, err)
 	}
 	return nil
 }
@@ -72,11 +72,11 @@ func (s AuthService) RegisterStudent(ctx context.Context, data dto.StudentRegist
 func (s AuthService) RegisterTeacher(ctx context.Context, data dto.TeacherRegistration) error {
 	hashedPas, err := security.HashPassword(data.Password)
 	if err != nil {
-		return fmt.Errorf("error processing password: %v", err)
+		return errs.ConcatErrors(ErrProcessingPassword, err)
 	}
 	_, err = s.TeacherRepository.CreateTeacher(ctx, data.Name, data.Email, hashedPas)
 	if err != nil {
-		return fmt.Errorf("unable to create teacher: %v", err)
+		return errs.ConcatErrors(ErrRegisterTeacher, err)
 	}
 	return nil
 }

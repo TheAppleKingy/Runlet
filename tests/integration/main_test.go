@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"Runlet/internal/infrastructure/config"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -17,7 +18,11 @@ import (
 var MainURL string
 
 func TestMain(m *testing.M) {
-	testDbUrl := "postgres://test_user:test_password@test_database:5432/test_database?sslmode=disable"
+	if err := config.LoadConfigs(); err != nil {
+		slog.Error("cannot load config data", "error", err)
+		os.Exit(1)
+	}
+	testDbUrl := config.DBConfig.TestURL
 	cli, err := sql.Open("postgres", testDbUrl)
 	if err != nil {
 		slog.Error(err.Error())

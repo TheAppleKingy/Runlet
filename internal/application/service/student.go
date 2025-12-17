@@ -4,7 +4,6 @@ import (
 	"Runlet/internal/application/dto"
 	"Runlet/internal/domain/entities"
 	"Runlet/internal/domain/interfaces"
-	"errors"
 
 	"context"
 	"log/slog"
@@ -36,7 +35,7 @@ func (s StudentService) GetStudentCourses(ctx context.Context, studentId int) ([
 
 func (s StudentService) GetStudentProblems(ctx context.Context, studentId int, courseId int) ([]entities.Problem, error) {
 	if !s.CourseRepository.CheckStudent(ctx, studentId, courseId) {
-		return []entities.Problem{}, errors.New("provided student does not belong to provided course")
+		return []entities.Problem{}, ErrStudentHasNoCourse
 	}
 	return s.ProblemRepository.GetCourseProblems(ctx, courseId)
 }

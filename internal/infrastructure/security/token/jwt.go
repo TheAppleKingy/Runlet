@@ -1,33 +1,25 @@
 package token
 
 import (
-	"errors"
-	"fmt"
+	"Runlet/internal/infrastructure/config"
+	"Runlet/internal/pkg/errs"
 	"maps"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 func getToken(payload map[string]any) (string, error) {
-	expireSeconds, err := strconv.Atoi(os.Getenv("JWT_TOKEN_EXPIRE_TIME"))
-	if err != nil {
-		return "", fmt.Errorf("error getting token exp time: %w", err)
-	}
+	expireSeconds := config.AuthConfig.TokenExpireTime
 	claims := jwt.MapClaims{
 		"exp": time.Now().Add(time.Second * time.Duration(expireSeconds)).Unix(),
 	}
 	maps.Copy(claims, payload)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signKey := os.Getenv("SECRET_KEY")
-	if signKey == "" {
-		return "", fmt.Errorf("no sign key")
-	}
+	signKey := config.AuthConfig.Secret
 	tokenString, err := token.SignedString([]byte(signKey))
 	if err != nil {
-		return "", fmt.Errorf("error signing token: %w", err)
+		return "", errs.WrapErrors(ErrSigningToken, err)
 	}
 	return tokenString, nil
 }
@@ -45,14 +37,10 @@ func getPayloadFromToken(tokenString string) (jwt.MapClaims, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken
 		}
-		return []byte(os.Getenv("SECRET_KEY")), nil
+		return []byte(config.AuthConfig.Secret), nil
 	})
 	if err != nil {
-		customError := ErrInvalidToken
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			customError = ErrTokenExpired
-		}
-		return nil, customError
+		return nil, errs.WrapErrors(ErrInvalidToken, err)
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
@@ -64,11 +52,11 @@ func getPayloadFromToken(tokenString string) (jwt.MapClaims, error) {
 func validateToken(tokenString string, fieldsRequired []string) (jwt.MapClaims, error) {
 	payload, err := getPayloadFromToken(tokenString)
 	if err != nil {
-		return nil, fmt.Errorf("error validate token:  %w", err)
+		return nil, errs.WrapErrors(ErrValidateToken, err)
 	}
 	for _, key := range fieldsRequired {
 		if _, ok := payload[key]; !ok {
-			return nil, fmt.Errorf("error validate token: %w", ErrValidateToken{key})
+			return nil, errs.WrapErrors(ErrValidateToken, ErrTokenNoRequiredData{key})
 		}
 	}
 	return payload, nil
@@ -77,11 +65,11 @@ func validateToken(tokenString string, fieldsRequired []string) (jwt.MapClaims, 
 func GetStudentFromToken(tokenString string) (int, error) {
 	payload, err := validateToken(tokenString, []string{"student_id"})
 	if err != nil {
-		return 0, fmt.Errorf("error handle token: %w", err)
+		return 0, err
 	}
 	studentId, ok := payload["student_id"].(float64)
 	if !ok {
-		return 0, ErrTokenDataFormat
+		return 0, errs.WrapErrors(ErrValidateToken, ErrTokenDataFormat)
 	}
 	return int(studentId), nil
 }
@@ -89,11 +77,11 @@ func GetStudentFromToken(tokenString string) (int, error) {
 func GetTeacherFromToken(tokenString string) (int, error) {
 	payload, err := validateToken(tokenString, []string{"teacher_id"})
 	if err != nil {
-		return 0, fmt.Errorf("error handle token: %w", err)
+		return 0, err
 	}
 	studentId, ok := payload["teacher_id"].(float64)
 	if !ok {
-		return 0, ErrTokenDataFormat
+		return 0, errs.WrapErrors(ErrValidateToken, ErrTokenDataFormat)
 	}
 	return int(studentId), nil
 
