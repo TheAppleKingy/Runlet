@@ -18,11 +18,11 @@ var (
 
 var (
 	ErrNoEnvTokenExpTime = errors.New("JWT_TOKEN_EXPIRE_TIME was not set at env")
-	ErrInvalidExpFormat  = errors.New("cannot parse int value from JWT_TOKEN_EXPIRE_TIME")
+	ErrInvalidExpFormat  = errors.New("unable to parse int value from JWT_TOKEN_EXPIRE_TIME")
 	ErrNoEnvSecret       = errors.New("SECRET_KEY was not set at env")
 )
 
 var (
 	ErrNoEnvDebug         = errors.New("DEBUG was not set at env")
-	ErrInvalidDebugFormat = errors.New("cannot parse bool from DEBUG")
+	ErrInvalidDebugFormat = errors.New("unable to parse bool from DEBUG")
 )

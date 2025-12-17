@@ -9,9 +9,7 @@ import (
 func unionErrors(target error, rule string, additional ...error) error {
 	fStr := "%w" + strings.Repeat(rule, len(additional))
 	chain := []any{target}
-	for _, err := range additional {
-		chain = append(chain, err)
-	}
+	chain = append(chain, additional)
 	return fmt.Errorf(fStr, chain...)
 }
 

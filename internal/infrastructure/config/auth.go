@@ -27,5 +27,3 @@ func (conf *authConfig) parse() error {
 	conf.Secret = s
 	return nil
 }
-
-var AuthConfig = authConfig{}

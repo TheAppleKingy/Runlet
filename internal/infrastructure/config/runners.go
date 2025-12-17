@@ -26,5 +26,3 @@ func (cfg *runnersConfig) parse() error {
 	}
 	return nil
 }
-
-var RunnersConfig = runnersConfig{}
